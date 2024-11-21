@@ -1,4 +1,4 @@
-from src.widget import mask_card_account,get_date
+from src.widget import get_date, mask_card_account
 
 number_import = input()
 

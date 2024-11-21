@@ -1,6 +1,7 @@
 from src.masks import get_mask_account, get_mask_card_number
 
-def mask_card_account(number_import:str) -> str:
+
+def mask_card_account(number_import: str) -> str:
     """"Функция обрабатывающая номер карты и счёта"""
     if 'Счет' in number_import:
         return f'Cчёт {get_mask_account(number_import[-20:])}'
@@ -11,7 +12,5 @@ def mask_card_account(number_import:str) -> str:
 
 
 def get_date(date: str) -> str:
-        '''Функция конвертации даты'''
-        return f'{date[8:10]}.{date[5:7]}.{date[0:4]}'
-
-
+    """Функция конвертации даты"""
+    return f'{date[8:10]}.{date[5:7]}.{date[0:4]}'

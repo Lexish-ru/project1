@@ -14,8 +14,6 @@ def filter_by_state(info_line: list[list[dict]] | Any, state: Any = 'EXECUTED') 
 
 def sort_by_date(info_line: list[list[dict]] | Any, reverse: bool = True) -> list[list[dict]]:
     """функция сортировки по датам"""
-    dates_list = []
-    for i in info_line:
-        converted_date = get_date(i['date'])
-        dates_list.append(converted_date)
-    return sorted(dates_list, reverse=reverse)
+    list_by_date = sorted(info_line, key=lambda dates_dict: dates_dict.get('date'), reverse=reverse)
+
+    return list_by_date

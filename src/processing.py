@@ -1,19 +1,17 @@
 from typing import Any
 
-from src.widget import get_date
 
-
-def filter_by_state(info_line: list[list[dict]] | Any, state: Any = 'EXECUTED') -> list[list[dict]]:
+def filter_by_state(transactions: list[dict] | Any, state: Any = 'EXECUTED') -> list[dict]:
     """Функиия сортивровки строк по признаку "STATE"""
-    state_list = []
-    for attribute in info_line:
+    filtered_transactions = []
+    for attribute in transactions:
         if attribute["state"] == state:
-            state_list.append(attribute)
-    return state_list
+            filtered_transactions.append(attribute)
+    return filtered_transactions
 
 
-def sort_by_date(info_line: list[list[dict]] | Any, reverse: bool = True) -> list[list[dict]]:
+def sort_by_date(transactions: list[dict] | Any, reverse: bool = True) -> list[dict]:
     """функция сортировки по датам"""
-    list_by_date = sorted(info_line, key=lambda dates_dict: dates_dict.get('date'), reverse=reverse)
+    list_by_date = sorted(transactions, key=lambda dates_dict: dates_dict.get('date'), reverse=reverse)
 
     return list_by_date

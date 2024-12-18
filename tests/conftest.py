@@ -2,6 +2,9 @@ from io import StringIO
 from pathlib import Path
 from typing import Dict, Generator, List, Tuple, Union
 from unittest.mock import patch
+import os
+
+import random
 
 import pytest
 
@@ -120,3 +123,11 @@ def mock_console_log() -> Generator[StringIO, None, None]:
 def mock_file_log(tmp_path: Path) -> Generator[Path, None, None]:
     log_file = tmp_path / "test.log"
     yield log_file
+
+LOG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../src/mylog.txt"))
+
+@pytest.fixture(autouse=True)
+def cleanup_log_file() -> None:
+    """Удаляет лог-файл перед каждым тестом."""
+    if os.path.exists(LOG_FILE):
+        os.remove(LOG_FILE)

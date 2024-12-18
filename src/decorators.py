@@ -1,29 +1,50 @@
-import functools
 import logging
-from typing import Any, Callable, Optional
-
+import os
+from functools import wraps
+from typing import Callable, Optional, Any
 
 def log(filename: Optional[str] = None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        logger = logging.getLogger(func.__name__)
-        handler = logging.FileHandler(filename) if filename else logging.StreamHandler()
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
+    """
+    Декоратор для логирования выполнения функции.
 
-        @functools.wraps(func)
+    Аргументы:
+        filename (Optional[str]): Имя файла для записи логов. Если None, логируется в консоль.
+    """
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+
+        @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
+            logger = logging.getLogger(func.__name__)
+            logger.setLevel(logging.INFO)
+
+            # Очистка существующих обработчиков
+            if logger.hasHandlers():
+                logger.handlers.clear()
+
+            # Абсолютный путь к файлу логов
+            if filename:
+                base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../src"))
+                os.makedirs(base_dir, exist_ok=True)
+                abs_path = os.path.join(base_dir, filename)
+
+                # Добавляем FileHandler
+                handler = logging.FileHandler(abs_path, mode='a')
+                formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+                handler.setFormatter(formatter)
+                logger.addHandler(handler)
+            else:
+                # Логирование в консоль
+                handler = logging.StreamHandler()
+                logger.addHandler(handler)
+
             try:
-                logger.info(f"{func.__name__} started with inputs: {args}, {kwargs}")
+                logger.info(f"Функция '{func.__name__}' запущена с аргументами: {args}, {kwargs}")
                 result = func(*args, **kwargs)
-                logger.info(f"{func.__name__} ok with result: {result}")
+                logger.info(f"Функция '{func.__name__}' выполнена. Результат: {result}")
                 return result
             except Exception as e:
-                logger.error(f"{func.__name__} error: {type(e).__name__}. Inputs: {args}, {kwargs}")
+                logger.error(f"Ошибка в функции '{func.__name__}': {e}")
                 raise
-            finally:
-                logger.info(f"{func.__name__} finished")
 
         return wrapper
     return decorator
@@ -31,12 +52,16 @@ def log(filename: Optional[str] = None) -> Callable[[Callable[..., Any]], Callab
 
 @log(filename="mylog.txt")
 def my_function(x: int, y: int) -> int:
+    """Функция для суммирования двух чисел."""
+    if not isinstance(x, int) or not isinstance(y, int):
+        raise TypeError("Аргументы должны быть целыми числами")
     return x + y
 
 
 if __name__ == "__main__":
+    """Точка входа для выполнения кода."""
     try:
-        print(my_function(1, 2))
-        print(my_function(1, "error"))  # This will raise a TypeError
+        print(my_function(1, 2))  # Выводит сумму 1 и 2
+        print(my_function("a", "b"))  # Провоцирует ошибку
     except Exception as e:
-        print(f"Handled exception: {e}")
+        print(f"Получено исключение: {e}")

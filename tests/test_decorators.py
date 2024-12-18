@@ -1,35 +1,49 @@
 import pytest
-
-from src.decorators import log
-
-
-@log()
-def test_function_success(a: int, b: int) -> int:
-    return a * b
+import os
+from src.decorators import my_function
 
 
-@log()
-def test_function_failure(a: int, b: int) -> float:
-    return a / b
+LOG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../src/mylog.txt"))
+
+def test_my_function_sum() -> None:
+    """Тест корректного суммирования двух чисел и создания лог-файла."""
+    result = my_function(3, 4)
+    assert result == 7, "Функция должна корректно складывать числа"
+
+    # Проверяем, что лог-файл был создан
+    assert os.path.exists(LOG_FILE), "Лог-файл должен быть создан в папке src"
+
+    # Проверяем содержимое лог-файла
+    with open(LOG_FILE, "r") as f:
+        logs = f.read()
+        assert "Функция 'my_function' запущена" in logs
+        assert "Функция 'my_function' выполнена" in logs
 
 
-def test_log_success_file(mock_file_log):
-    # Применяем декоратор с указанием файла
-    decorated_test_func = log(filename=str(mock_file_log))(test_function_success)
-    result = decorated_test_func(4, 5)  # Передаем параметры напрямую
-    assert result == 20
-    with open(mock_file_log, "r") as log_file:
-        log_content = log_file.read()
-        assert "test_function_success started with inputs" in log_content
-        assert "test_function_success ok with result" in log_content
+def test_my_function_type_error() -> None:
+    """Тест обработки исключений при некорректных типах аргументов."""
+    with pytest.raises(TypeError):
+        my_function("a", "b")
+
+    with open(LOG_FILE, "r") as f:
+        logs = f.read()
+
+    # Проверяем, что логи содержат сообщение об ошибке
+    assert "Ошибка в функции 'my_function'" in logs, "Логи должны содержать запись об ошибке"
+    assert "Аргументы должны быть целыми числами" in logs, "Логи должны указывать на причину ошибки"
 
 
-def test_log_failure_file(mock_file_log):
-    # Применяем декоратор с указанием файла
-    decorated_test_func = log(filename=str(mock_file_log))(test_function_failure)
-    with pytest.raises(ZeroDivisionError):
-        decorated_test_func(1, 0)  # Передаем параметры напрямую
-    with open(mock_file_log, "r") as log_file:
-        log_content = log_file.read()
-        assert "test_function_failure error: ZeroDivisionError" in log_content
-        assert "Inputs: (1, 0), {}" in log_content
+def test_my_function_zero() -> None:
+    """Тест суммирования нулевых значений."""
+    result = my_function(0, 0)
+    assert result == 0, "Сумма нулей должна быть равна 0"
+
+
+def test_log_file_creation() -> None:
+    """Тест создания лог-файла при вызове функции с декоратором."""
+    my_function(1, 1)
+    assert os.path.exists(LOG_FILE), "Лог-файл должен быть создан"
+    with open(LOG_FILE, "r") as f:
+        logs = f.read()
+        assert "Функция 'my_function' запущена" in logs, "Логи должны содержать запись о запуске функции"
+        assert "Функция 'my_function' выполнена" in logs, "Логи должны содержать запись об упешном выполнении функции"

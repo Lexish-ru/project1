@@ -1,7 +1,8 @@
 import logging
 import os
 from functools import wraps
-from typing import Callable, Optional, Any
+from typing import Any, Callable, Optional
+
 
 def log(filename: Optional[str] = None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """

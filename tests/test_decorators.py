@@ -1,9 +1,12 @@
-import pytest
 import os
+
+import pytest
+
 from src.decorators import my_function
 
 
 LOG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../src/mylog.txt"))
+
 
 def test_my_function_sum() -> None:
     """Тест корректного суммирования двух чисел и создания лог-файла."""

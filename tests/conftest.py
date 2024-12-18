@@ -1,4 +1,7 @@
-from typing import Dict, List, Tuple, Union
+from io import StringIO
+from pathlib import Path
+from typing import Dict, Generator, List, Tuple, Union
+from unittest.mock import patch
 
 import pytest
 
@@ -105,3 +108,15 @@ def generators_transactions_fixture() -> List[Dict[str, Union[int, str, Dict[str
             "to": "Счет 987654321"
         }
     ]
+
+
+@pytest.fixture
+def mock_console_log() -> Generator[StringIO, None, None]:
+    with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+        yield mock_stdout
+
+
+@pytest.fixture
+def mock_file_log(tmp_path: Path) -> Generator[Path, None, None]:
+    log_file = tmp_path / "test.log"
+    yield log_file

@@ -11,13 +11,6 @@ API_KEY = get_or_create_api_key()
 def convert_to_rub(amount: Union[int, float], currency_code: str) -> float:
     """
     Конвертирует сумму из указанной валюты в рубли.
-
-    Args:
-        amount (Union[int, float]): Сумма для конвертации.
-        currency_code (str): Код валюты (например, USD, EUR).
-
-    Returns:
-        float: Сумма в рублях или 0.0 в случае ошибки.
     """
     if currency_code == "RUB":
         return float(amount)
@@ -35,10 +28,8 @@ def convert_to_rub(amount: Union[int, float], currency_code: str) -> float:
         result = response.json()
         return float(result.get("result", 0.0))
     except requests.RequestException as e:
-        # Обрабатываем ошибки API
         print(f"Ошибка при запросе к API: {e}")
         return 0.0
     except KeyError as e:
-        # Обрабатываем ошибки в структуре ответа
         print(f"Ошибка при обработке ответа API: {e}")
         return 0.0

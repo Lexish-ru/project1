@@ -36,16 +36,9 @@ def test_convert_to_rub_api_error(mock_requests_get, mock_get_api_key):
     """
     Проверка обработки ошибки API.
     """
-    # Симулируем исключение при вызове requests.get
     mock_requests_get.side_effect = requests.RequestException("API Error")
-
-    # Вызываем функцию
     result = convert_to_rub(100, "USD")
-
-    # Проверяем, что результат равен 0.0
     assert result == 0.0
-
-    # Проверяем, что запрос был сделан один раз
     mock_requests_get.assert_called_once()
 
 

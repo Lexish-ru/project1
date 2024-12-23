@@ -16,7 +16,7 @@ def test_get_or_create_api_key_missing_key(mock_load_dotenv, mock_getenv, mock_o
 
     assert api_key == "test_api_key"
     mock_input.assert_called_once_with("Введите API-ключ: ")
-    mock_open_file.assert_called_once_with(".env", "a")
+    mock_open_file.assert_called_once_with("../.env", "a")
     mock_open_file().write.assert_called_once_with("\nAPI_KEY=test_api_key")
 
 
@@ -41,7 +41,7 @@ def test_get_or_create_api_key_invalid_input(mock_load_dotenv, mock_getenv, mock
     """
     api_key = get_or_create_api_key()
 
-    assert api_key == "valid_api_key"  # Проверяем, что второй ввод был корректен
-    assert mock_input.call_count == 2  # Проверяем, что input вызывается дважды
-    mock_open_file.assert_called_once_with(".env", "a")
+    assert api_key == "valid_api_key"
+    assert mock_input.call_count == 2
+    mock_open_file.assert_called_once_with("../.env", "a")
     mock_open_file().write.assert_called_once_with("\nAPI_KEY=valid_api_key")

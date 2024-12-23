@@ -1,7 +1,8 @@
 import os
+from typing import Union
+
 import requests
 from dotenv import load_dotenv
-from typing import Union
 
 load_dotenv()
 

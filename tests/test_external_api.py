@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from src.external_api import convert_to_rub
 
 
-def test_convert_to_rub_usd_to_rub():
+def test_convert_to_rub_usd_to_rub() -> None:
     with patch("src.external_api.requests.get") as mock_get:
         mock_response = MagicMock()
         mock_response.json.return_value = {"result": 75.0}

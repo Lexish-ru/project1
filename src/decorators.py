@@ -7,9 +7,6 @@ from typing import Any, Callable, Optional
 def log(filename: Optional[str] = None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """
     Декоратор для логирования выполнения функции.
-
-    Аргументы:
-        filename (Optional[str]): Имя файла для записи логов. Если None, логируется в консоль.
     """
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
 

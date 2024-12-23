@@ -1,31 +1,47 @@
-import pytest
-from src.utils import read_transactions
-import json
 from unittest.mock import mock_open, patch
 
-# Тест: успешное чтение транзакций
-def test_read_transactions_valid_file() -> None:
-    valid_json = '[{"id": 1, "amount": 100.0}, {"id": 2, "amount": 200.0}]'
-    with patch("builtins.open", mock_open(read_data=valid_json)):
-        result = read_transactions("data/operations.json")
-        assert isinstance(result, list)
-        assert len(result) == 2
-        assert result[0]["id"] == 1
+from src.utils import get_or_create_api_key
 
-# Тест: файл не найден
-def test_read_transactions_file_not_found() -> None:
-    result = read_transactions("data/nonexistent.json")
-    assert result == []
 
-# Тест: пустой файл
-def test_read_transactions_empty_file() -> None:
-    with patch("builtins.open", mock_open(read_data="")):
-        result = read_transactions("data/operations.json")
-        assert result == []
+@patch("builtins.input", return_value="test_api_key")
+@patch("builtins.open", new_callable=mock_open)
+@patch("os.getenv", return_value=None)
+@patch("src.utils.load_dotenv")
+def test_get_or_create_api_key_missing_key(mock_load_dotenv, mock_getenv, mock_open_file, mock_input):
+    """
+    Проверка, что функция запрашивает API-ключ у пользователя, если ключ отсутствует,
+    и сохраняет его в .env.
+    """
+    api_key = get_or_create_api_key()
 
-# Тест: некорректный формат данных
-def test_read_transactions_invalid_format() -> None:
-    invalid_json = '{"id": 1, "amount": 100.0}'  # JSON не является списком
-    with patch("builtins.open", mock_open(read_data=invalid_json)):
-        result = read_transactions("data/operations.json")
-        assert result == []
+    assert api_key == "test_api_key"
+    mock_input.assert_called_once_with("Введите API-ключ: ")
+    mock_open_file.assert_called_once_with(".env", "a")
+    mock_open_file().write.assert_called_once_with("\nAPI_KEY=test_api_key")
+
+
+@patch("os.getenv", return_value="existing_api_key")
+@patch("src.utils.load_dotenv")
+def test_get_or_create_api_key_existing_key(mock_load_dotenv, mock_getenv):
+    """
+    Проверка, что функция возвращает существующий API-ключ из переменных окружения.
+    """
+    api_key = get_or_create_api_key()
+    assert api_key == "existing_api_key"
+    mock_getenv.assert_called_once_with("API_KEY")
+
+
+@patch("builtins.input", side_effect=["", "valid_api_key"])
+@patch("builtins.open", new_callable=mock_open)
+@patch("os.getenv", return_value=None)
+@patch("src.utils.load_dotenv")
+def test_get_or_create_api_key_invalid_input(mock_load_dotenv, mock_getenv, mock_open_file, mock_input):
+    """
+    Проверка обработки случая, когда пользователь вводит пустую строку вместо API-ключа.
+    """
+    api_key = get_or_create_api_key()
+
+    assert api_key == "valid_api_key"  # Проверяем, что второй ввод был корректен
+    assert mock_input.call_count == 2  # Проверяем, что input вызывается дважды
+    mock_open_file.assert_called_once_with(".env", "a")
+    mock_open_file().write.assert_called_once_with("\nAPI_KEY=valid_api_key")

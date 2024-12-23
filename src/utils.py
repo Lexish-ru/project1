@@ -1,21 +1,24 @@
-import json
-from pathlib import Path
-from typing import Any, Dict, List
+import os
+
+from dotenv import load_dotenv
+
+ENV_FILE = ".env"
 
 
-def read_transactions(json_path: str) -> List[Dict[str, Any]]:
+def get_or_create_api_key() -> str:
     """
-    Читает JSON-файл с транзакциями и возвращает список словарей.
-    Возвращает пустой список, если файл пустой, содержит некорректные данные или не найден.
+    Получает API-ключ из .env файла или запрашивает у пользователя и сохраняет его.
     """
-    try:
-        file = Path(json_path)
-        if not file.is_file():
-            return []
-        with open(file, encoding="utf-8") as f:
-            data = json.load(f)
-            if not isinstance(data, list):
-                return []
-            return data
-    except (json.JSONDecodeError, FileNotFoundError, TypeError):
-        return []
+    load_dotenv()
+    api_key = os.getenv("API_KEY")
+
+    if not api_key:
+        if os.environ.get("PYTEST_RUNNING"):  # Проверка, запущен ли pytest
+            raise Exception("API-ключ не найден для тестов")
+        if not api_key:
+            while not api_key:
+                api_key = input("Введите API-ключ: ").strip()
+            with open(".env", "a") as env_file:
+                env_file.write(f"\nAPI_KEY={api_key}")
+
+    return api_key

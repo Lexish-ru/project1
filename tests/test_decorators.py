@@ -4,7 +4,6 @@ import pytest
 
 from src.decorators import my_function
 
-
 LOG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../src/mylog.txt"))
 
 

@@ -1,6 +1,7 @@
 import logging
 import os
 
+
 def setup_logger(name: str, log_file: str, level: int = logging.INFO) -> logging.Logger:
     """
     Настраивает логгер.

@@ -1,11 +1,9 @@
-from typing import List, Tuple, Union
-
 import pytest
 
-from src.widget import mask_card_account, get_date
+from src.widget import get_date, mask_card_account
 
 
-def test_mask_card_account():
+def test_mask_card_account() -> None:
     """Тест функции обработки номера карты и счёта"""
     assert mask_card_account("Visa 1234567812345678") == "Visa 1234 56** **** 5678"
     assert mask_card_account("Счет 12345678901234567890") == "Cчёт **7890"

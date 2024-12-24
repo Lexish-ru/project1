@@ -1,12 +1,13 @@
+import logging
 import os
 from io import StringIO
 from pathlib import Path
-from typing import Dict, Generator, List, Tuple, Union
+from typing import Any, Dict, Generator, List, Tuple, Union
 from unittest.mock import patch
-import logging
-from src.logger import setup_logger
 
 import pytest
+
+from src.logger import setup_logger
 
 
 @pytest.fixture
@@ -135,9 +136,8 @@ def cleanup_log_file() -> None:
         os.remove(LOG_FILE)
 
 
-
 @pytest.fixture
-def temp_log_file(tmp_path):
+def temp_log_file(tmp_path: Any) -> Generator[str, None, None]:
     """
     Создает временный файл для логов.
     """

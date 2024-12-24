@@ -1,10 +1,5 @@
 import logging
 import os
-from typing import Optional
-
-# Создаем папку для логов, если она не существует
-LOG_DIR = "logs"
-os.makedirs(LOG_DIR, exist_ok=True)
 
 def setup_logger(name: str, log_file: str, level: int = logging.INFO) -> logging.Logger:
     """
@@ -18,20 +13,19 @@ def setup_logger(name: str, log_file: str, level: int = logging.INFO) -> logging
     Returns:
         logging.Logger: Настроенный логгер.
     """
+    log_dir = os.path.dirname(log_file)
+    if log_dir and not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
-    # Создаем обработчик для записи в файл
-    file_handler = logging.FileHandler(log_file, mode="w")  # Перезапись логов
-    file_handler.setLevel(level)
-
-    # Формат логирования
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    file_handler.setFormatter(formatter)
-
-    # Добавляем обработчик
-    logger.addHandler(file_handler)
+    # Удаляем старые обработчики, чтобы избежать дублирования
+    if not any(isinstance(h, logging.FileHandler) and h.baseFilename == log_file for h in logger.handlers):
+        file_handler = logging.FileHandler(log_file, mode="w")
+        file_handler.setLevel(level)
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
 
     return logger

@@ -135,12 +135,15 @@ def cleanup_log_file() -> None:
         os.remove(LOG_FILE)
 
 
+
 @pytest.fixture
 def temp_log_file(tmp_path):
     """
     Создает временный файл для логов.
     """
-    log_file = tmp_path / "temp.log"
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / "temp.log"
     return str(log_file)
 
 

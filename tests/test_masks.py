@@ -1,15 +1,21 @@
-from typing import List, Tuple
+from src.masks import mask_card_number, mask_bank_account
+import pytest
 
-from src.masks import get_mask_account, get_mask_card_number
-
-
-def test_get_mask_card_number(card_test_data: List[Tuple[str, str]]) -> None:
+def test_mask_card_number():
     """Тест функции маскировки номера карты"""
-    for card_number, expected in card_test_data:
-        assert get_mask_card_number(card_number) == expected
+    assert mask_card_number("1234567812345678") == "1234 56** **** 5678"
+    assert mask_card_number("8765432187654321") == "8765 43** **** 4321"
+    with pytest.raises(ValueError, match="Неверный формат номера банковской карты"):
+        mask_card_number("1234abcd5678efgh")
+    with pytest.raises(ValueError, match="Неверный формат номера банковской карты"):
+        mask_card_number("12345678")
 
 
-def test_get_mask_account(account_test_data: List[Tuple[str, str]]) -> None:
+def test_mask_bank_account():
     """Тест функции маскировки номера счёта"""
-    for bank_account, expected in account_test_data:
-        assert get_mask_account(bank_account) == expected
+    assert mask_bank_account("12345678901234567890") == "**7890"
+    assert mask_bank_account("09876543210987654321") == "**4321"
+    with pytest.raises(ValueError, match="Неверный формат номера банковского счёта"):
+        mask_bank_account("abcd1234abcd5678abcd")
+    with pytest.raises(ValueError, match="Неверный формат номера банковского счёта"):
+        mask_bank_account("12345678")

@@ -18,12 +18,9 @@ def get_or_create_api_key() -> str:
     api_key = os.getenv("API_KEY")
 
     if not api_key:
-        logger.warning("API-ключ отсутствует. Запрашиваем у пользователя.")
-        api_key = input("Введите API-ключ: ").strip()
+        while not api_key:
+            api_key = input("Введите API-ключ: ").strip()
         with open(".env", "a") as env_file:
             env_file.write(f"\nAPI_KEY={api_key}")
-        logger.info("API-ключ успешно сохранен в .env.")
-    else:
-        logger.info("API-ключ успешно загружен из .env.")
 
     return api_key

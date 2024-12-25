@@ -9,31 +9,26 @@ def log(filename: Optional[str] = None) -> Callable[[Callable[..., Any]], Callab
     Декоратор для логирования выполнения функции.
     """
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             logger = logging.getLogger(func.__name__)
             logger.setLevel(logging.INFO)
 
-            # Очистка существующих обработчиков
             if logger.hasHandlers():
                 logger.handlers.clear()
 
-            # Абсолютный путь к файлу логов
             if filename:
                 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../src"))
                 os.makedirs(base_dir, exist_ok=True)
                 abs_path = os.path.join(base_dir, filename)
 
-                # Добавляем FileHandler
-                handler = logging.FileHandler(abs_path, mode='a')
+                file_handler = logging.FileHandler(abs_path, mode='a')
                 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-                handler.setFormatter(formatter)
-                logger.addHandler(handler)
+                file_handler.setFormatter(formatter)
+                logger.addHandler(file_handler)
             else:
-                # Логирование в консоль
-                handler = logging.StreamHandler()
-                logger.addHandler(handler)
+                stream_handler = logging.StreamHandler()
+                logger.addHandler(stream_handler)
 
             try:
                 logger.info(f"Функция '{func.__name__}' запущена с аргументами: {args}, {kwargs}")

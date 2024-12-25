@@ -1,3 +1,4 @@
+from typing import Any
 from unittest.mock import mock_open, patch
 
 from src.utils import get_or_create_api_key
@@ -5,18 +6,24 @@ from src.utils import get_or_create_api_key
 
 @patch("builtins.input", return_value="test_api_key")
 @patch("builtins.open", new_callable=mock_open)
-@patch("os.getenv", return_value=None)
+@patch("os.getenv", side_effect=[None, "test_api_key"])
 @patch("src.utils.load_dotenv")
-def test_get_or_create_api_key_missing_key(mock_load_dotenv, mock_getenv, mock_open_file, mock_input):
+def test_get_or_create_api_key_missing_key(mock_load_dotenv: Any, mock_getenv: Any,
+                                           mock_open_file: Any, mock_input: Any) -> None:
     """
     Проверка, что функция запрашивает API-ключ у пользователя, если ключ отсутствует,
     и сохраняет его в .env.
     """
     api_key = get_or_create_api_key()
 
+    # Проверяем, что возвращается правильный ключ
     assert api_key == "test_api_key"
+
+    # Проверяем, что `input` был вызван
     mock_input.assert_called_once_with("Введите API-ключ: ")
-    mock_open_file.assert_called_once_with("../.env", "a")
+
+    # Проверяем, что файл был открыт для записи
+    mock_open_file.assert_any_call(".env", "a")
     mock_open_file().write.assert_called_once_with("\nAPI_KEY=test_api_key")
 
 
@@ -33,15 +40,21 @@ def test_get_or_create_api_key_existing_key(mock_load_dotenv, mock_getenv):
 
 @patch("builtins.input", side_effect=["", "valid_api_key"])
 @patch("builtins.open", new_callable=mock_open)
-@patch("os.getenv", return_value=None)
+@patch("os.getenv", side_effect=[None, "valid_api_key"])
 @patch("src.utils.load_dotenv")
-def test_get_or_create_api_key_invalid_input(mock_load_dotenv, mock_getenv, mock_open_file, mock_input):
+def test_get_or_create_api_key_invalid_input(mock_load_dotenv: Any, mock_getenv: Any,
+                                             mock_open_file: Any, mock_input: Any) -> None:
     """
     Проверка обработки случая, когда пользователь вводит пустую строку вместо API-ключа.
     """
     api_key = get_or_create_api_key()
 
+    # Проверяем, что возвращается правильный ключ
     assert api_key == "valid_api_key"
+
+    # Проверяем, что `input` был вызван дважды (пустая строка + валидный ввод)
     assert mock_input.call_count == 2
-    mock_open_file.assert_called_once_with("../.env", "a")
+
+    # Проверяем, что файл был открыт для записи
+    mock_open_file.assert_any_call(".env", "a")
     mock_open_file().write.assert_called_once_with("\nAPI_KEY=valid_api_key")

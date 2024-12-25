@@ -7,7 +7,7 @@ from src.external_api import convert_to_rub
 
 @patch("src.external_api.get_or_create_api_key", return_value="mock_api_key")
 @patch("src.external_api.requests.get")
-def test_convert_to_rub_usd_to_rub(mock_requests_get, mock_get_api_key):
+def test_convert_to_rub_usd_to_rub(mock_requests_get: MagicMock, mock_get_api_key: MagicMock) -> None:
     """
     Проверка успешной конвертации из USD в рубли.
     """
@@ -32,7 +32,8 @@ def test_convert_to_rub_rub_to_rub(mock_get_api_key):
 
 @patch("src.external_api.get_or_create_api_key", return_value="mock_api_key")
 @patch("src.external_api.requests.get")
-def test_convert_to_rub_api_error(mock_requests_get, mock_get_api_key):
+def test_convert_to_rub_api_error(mock_requests_get: MagicMock, mock_get_api_key: MagicMock) -> None:
+    ...
     """
     Проверка обработки ошибки API.
     """

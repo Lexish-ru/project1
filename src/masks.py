@@ -1,21 +1,34 @@
-def get_mask_card_number(card_number: str) -> str:
-    """Функция скытия номера карты введённого пользователем"""
-    CARD_NUMBER_LEGHT = int(16)
-    if CARD_NUMBER_LEGHT != len(card_number):
-        return "Введённые Вами данные не соответсвуют формату номера банковской карты"
-    else:
-        if card_number.isdigit():
-            masked_card_number = card_number[0:4] + " " + card_number[4:6] + "** **** " + card_number[-4:]
-            return str(masked_card_number)
-        else:
-            return "Введённые Вами данные не соответсвуют формату номера банковской карты"
+from src.logger import setup_logger
+
+# Настраиваем логгер
+logger = setup_logger(name="masks", log_file="logs/masks.log")
 
 
-def get_mask_account(bank_account: str) -> str:
-    """Функция, которая скрывает номер счёта введённого пользователем"""
-    BANK_ACCOUNT_LEGHT = 20
-    if len(bank_account) == BANK_ACCOUNT_LEGHT and bank_account.isdigit():
-        masked_account = "**" + bank_account[-4:]
-        return str(masked_account)
-    else:
-        return "Введённые Вами данные не соответсвуют формату номера банковского счёта."
+def mask_card_number(card_number: str) -> str:
+    """
+    Маскирует номер карты, оставляя первые 4, последние 4 цифры и две после первых 4 видимыми.
+    """
+    CARD_NUMBER_LENGTH = 16
+
+    if len(card_number) != CARD_NUMBER_LENGTH or not card_number.isdigit():
+        logger.error(f"Ошибка: некорректный номер карты: {card_number}")
+        raise ValueError("Неверный формат номера банковской карты")
+
+    masked_card = f"{card_number[:4]} {card_number[4:6]}** **** {card_number[-4:]}"
+    logger.info(f"Маскированный номер карты: {masked_card}")
+    return masked_card
+
+
+def mask_bank_account(bank_account: str) -> str:
+    """
+    Маскирует номер банковского счета, оставляя только последние 4 цифры видимыми.
+    """
+    BANK_ACCOUNT_LENGTH = 20
+
+    if len(bank_account) != BANK_ACCOUNT_LENGTH or not bank_account.isdigit():
+        logger.error(f"Ошибка: некорректный номер банковского счета: {bank_account}")
+        raise ValueError("Неверный формат номера банковского счёта")
+
+    masked_account = f"**{bank_account[-4:]}"
+    logger.info(f"Маскированный номер счета: {masked_account}")
+    return masked_account

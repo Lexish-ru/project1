@@ -1,10 +1,13 @@
+import logging
 import os
 from io import StringIO
 from pathlib import Path
-from typing import Dict, Generator, List, Tuple, Union
+from typing import Any, Dict, Generator, List, Tuple, Union
 from unittest.mock import patch
 
 import pytest
+
+from src.logger import setup_logger
 
 
 @pytest.fixture
@@ -131,3 +134,26 @@ def cleanup_log_file() -> None:
     """Удаляет лог-файл перед каждым тестом."""
     if os.path.exists(LOG_FILE):
         os.remove(LOG_FILE)
+
+
+@pytest.fixture
+def temp_log_file(tmp_path: Any) -> Generator[str, None, None]:
+    """
+    Создает временный файл для логов.
+    """
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / "temp.log"
+    return str(log_file)
+
+
+@pytest.fixture
+def logger_with_temp_file(temp_log_file):
+    """
+    Создает логгер, который пишет в временный файл.
+    """
+    logger = setup_logger("test_logger", temp_log_file, logging.DEBUG)
+    yield logger
+    # Удаляем обработчики после использования
+    for handler in logger.handlers:
+        logger.removeHandler(handler)

@@ -1,25 +1,21 @@
-import os
 
+import os
 from dotenv import load_dotenv
 
-from src.logger import setup_logger
-
-ENV_FILE = "../.env"
-# Настраиваем логгер
-logger = setup_logger(name="utils", log_file="logs/utils.log")
-
+load_dotenv()
 
 def get_or_create_api_key() -> str:
-    """
-    Получает API-ключ из .env файла или запрашивает у пользователя и сохраняет его.
-    """
-    load_dotenv()
+    """Получает API-ключ из файла .env или запрашивает у пользователя."""
     api_key = os.getenv("API_KEY")
-
     if not api_key:
         while not api_key:
             api_key = input("Введите API-ключ: ").strip()
-        with open(".env", "a") as env_file:
-            env_file.write(f"\nAPI_KEY={api_key}")
+            if not api_key:
+                print("API-ключ не может быть пустым. Попробуйте снова.")
 
+        # Save the API key to the .env file
+        env_path = os.path.join(os.getcwd(), ".env")
+        with open(env_path, "a", encoding="utf-8") as env_file:
+            env_file.write(f"API_KEY={api_key}\n")
+    
     return api_key

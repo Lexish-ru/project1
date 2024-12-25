@@ -4,7 +4,7 @@ import requests
 
 from src.utils import get_or_create_api_key
 
-EXCHANGE_API_URL = "https://api.apilayer.com/exchangerates_data/convert"
+EXCHANGE_API_URL = "`https://api.apilayer.com/exchangerates_data/convert"
 API_KEY = get_or_create_api_key()
 
 

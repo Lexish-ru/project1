@@ -43,3 +43,72 @@ def test_log_file_creation() -> None:
         logs = f.read()
         assert "Функция 'my_function' запущена" in logs, "Логи должны содержать запись о запуске функции"
         assert "Функция 'my_function' выполнена" in logs, "Логи должны содержать запись об упешном выполнении функции"
+
+
+import pytest
+from unittest.mock import patch
+from src.decorators import log
+
+@log()
+def sample_function(a, b):
+    return a + b
+
+@log()
+def error_function():
+    raise ValueError("Test Error")
+
+def test_log_to_stream():
+    """Test logging to stream handler when no filename is provided."""
+    with patch("sys.stdout") as mock_stdout:
+        result = sample_function(1, 2)
+        assert result == 3
+        assert "Функция 'sample_function' запущена" in mock_stdout.getvalue()
+        assert "Функция 'sample_function' выполнена" in mock_stdout.getvalue()
+
+def test_log_error_handling():
+    """Test logging an error when the function raises an exception."""
+    with patch("sys.stdout") as mock_stdout:
+        with pytest.raises(ValueError, match="Test Error"):
+            error_function()
+        assert "Ошибка в функции 'error_function'" in mock_stdout.getvalue()
+        assert "Test Error" in mock_stdout.getvalue()
+
+def test_log_file_unwritable(tmp_path):
+    """Test behavior when the log file is not writable."""
+    unwritable_file = tmp_path / "unwritable.log"
+    unwritable_file.touch(0o000)  # Create a file with no permissions
+
+    @log(filename=str(unwritable_file))
+    def sample_unwritable_function():
+        return "Unwritable"
+
+    with pytest.raises(PermissionError):
+        sample_unwritable_function()
+
+
+import pytest
+from src.decorators import log
+
+@log()
+def sample_function(a, b):
+    return a + b
+
+@log()
+def error_function():
+    raise ValueError("Test Error")
+
+def test_log_to_stream(caplog):
+    """Test logging to stream handler when no filename is provided."""
+    with caplog.at_level("INFO"):
+        result = sample_function(1, 2)
+        assert result == 3
+        assert "Функция 'sample_function' запущена" in caplog.text
+        assert "Функция 'sample_function' выполнена" in caplog.text
+
+def test_log_error_handling(caplog):
+    """Test logging an error when the function raises an exception."""
+    with caplog.at_level("ERROR"):
+        with pytest.raises(ValueError, match="Test Error"):
+            error_function()
+        assert "Ошибка в функции 'error_function'" in caplog.text
+        assert "Test Error" in caplog.text

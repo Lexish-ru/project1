@@ -70,3 +70,20 @@ def search_transactions_by_description(transactions: List[Dict[str, str]], searc
     """
     pattern = re.compile(re.escape(search_term), re.IGNORECASE)
     return [transaction for transaction in transactions if pattern.search(transaction.get('description', ''))]
+
+def categorize_transactions_by_description(transactions: List[Dict[str, str]], categories: List[str]) -> Dict[str, int]:
+    """
+    Подсчет категорий транзакций на основе описания.
+
+    :param transactions: Список словарей с данными о транзакциях.
+    :param categories: Список категорий для подсчета.
+    :return: Словарь, где ключи - категории, а значения - количество транзакций в каждой категории.
+    """
+    category_counts = {category: 0 for category in categories}
+    for transaction in transactions:
+        description = transaction.get('description', '').lower()
+        for category in categories:
+            if category.lower() in description:
+                category_counts[category] += 1
+    return category_counts
+

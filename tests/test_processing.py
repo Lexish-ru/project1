@@ -2,6 +2,7 @@ from typing import List, Dict
 import os
 import pytest
 import pandas as pd
+from unittest.mock import patch, MagicMock
 from src.processing import filter_by_state, sort_by_date, read_transactions_from_csv, read_transactions_from_excel
 
 @pytest.mark.parametrize(
@@ -102,7 +103,7 @@ def test_read_transactions_from_excel():
         {
             "id": "650703",
             "state": "EXECUTED",
-            "date": "2023-09-05T11:30:32Z",  # Ожидаемая дата с суффиксом Z
+            "date": "2023-09-05T11:30:32Z",
             "amount": 16210,
             "currency_name": "Sol",
             "currency_code": "PEN",
@@ -126,11 +127,9 @@ def test_read_transactions_from_excel():
     print(f"Using file: {test_file}")  # Проверяем путь к файлу
     result = read_transactions_from_excel(test_file)
 
-    # Приведение ID и даты к ожидаемому формату
+    # Приводим id к строке для унификации
     for transaction in result:
         transaction['id'] = str(transaction['id'])
-        if not transaction['date'].endswith("Z"):
-            transaction['date'] += "Z"  # Добавляем суффикс Z, если его нет
 
     for idx, (expected, actual) in enumerate(zip(expected_output, result)):
         for key in expected:
@@ -138,3 +137,91 @@ def test_read_transactions_from_excel():
 
     print("Test passed for Excel file.")
 
+@patch("pandas.read_csv")
+def test_read_transactions_from_csv_mock(mock_read_csv):
+    """Тест функции чтения данных из CSV с использованием Mock."""
+    mock_data = pd.DataFrame([
+        {
+            "id": "650703",
+            "state": "EXECUTED",
+            "date": "2023-09-05T11:30:32Z",
+            "amount": 16210,
+            "currency_name": "Sol",
+            "currency_code": "PEN",
+            "from": "Счет 58803664561298323391",
+            "to": "Счет 39745660563456619397",
+            "description": "Перевод организации",
+        },
+        {
+            "id": "3598919",
+            "state": "EXECUTED",
+            "date": "2020-12-06T23:00:58Z",
+            "amount": 29740,
+            "currency_name": "Peso",
+            "currency_code": "COP",
+            "from": "Discover 3172601889670065",
+            "to": "Discover 0720428384694643",
+            "description": "Перевод с карты на карту",
+        },
+    ])
+
+    mock_read_csv.return_value = mock_data
+
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+    test_file = os.path.join(base_dir, "transactions.csv")
+
+    result = read_transactions_from_csv(test_file)
+
+    assert len(result) == 2
+    assert result[0]["id"] == "650703"
+    assert result[1]["id"] == "3598919"
+
+    print("Mock test passed for CSV.")
+
+@patch("pandas.read_excel")
+def test_read_transactions_from_excel_mock(mock_read_excel):
+    """Тест функции чтения данных из Excel с использованием Mock."""
+    mock_data = pd.DataFrame([
+        {
+            "id": "650703",
+            "state": "EXECUTED",
+            "date": "2023-09-05T11:30:32Z",
+            "amount": 16210,
+            "currency_name": "Sol",
+            "currency_code": "PEN",
+            "from": "Счет 58803664561298323391",
+            "to": "Счет 39745660563456619397",
+            "description": "Перевод организации",
+        },
+        {
+            "id": "3598919",
+            "state": "EXECUTED",
+            "date": "2020-12-06T23:00:58Z",
+            "amount": 29740,
+            "currency_name": "Peso",
+            "currency_code": "COP",
+            "from": "Discover 3172601889670065",
+            "to": "Discover 0720428384694643",
+            "description": "Перевод с карты на карту",
+        },
+    ])
+
+    mock_read_excel.return_value = mock_data
+
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+    test_file = os.path.join(base_dir, "transactions_excel.xlsx")
+
+    result = read_transactions_from_excel(test_file)
+
+    assert len(result) == 2
+    assert result[0]["id"] == "650703"
+    assert result[1]["id"] == "3598919"
+
+    print("Mock test passed for Excel.")
+
+# Тестовая функция для проверки корректности работы
+if __name__ == "__main__":
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+    test_file = os.path.join(base_dir, "transactions_excel.xlsx")
+    result = read_transactions_from_excel(test_file)
+    print(result[:2])  # Вывод первых двух записей

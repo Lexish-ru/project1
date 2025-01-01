@@ -1,7 +1,5 @@
 import json
-import csv
 import os
-from typing import List
 from src.processing import (
     read_transactions_from_csv,
     read_transactions_from_excel,
@@ -9,6 +7,25 @@ from src.processing import (
     sort_by_date,
     search_transactions_by_description,
 )
+from src.masks import mask_bank_account
+from src.widget import get_date
+
+
+def format_transaction(transaction):
+    """
+    Форматирует транзакцию для вывода.
+    :param transaction: Словарь с данными транзакции.
+    :return: Отформатированная строка.
+    """
+    date = get_date(transaction.get("date", ""))
+    description = transaction.get("description", "Нет описания")
+    account_from = mask_bank_account(transaction.get("from", ""))
+    account_to = mask_bank_account(transaction.get("to", ""))
+    amount = transaction.get("amount", 0)
+    currency = transaction.get("currency_name", "Unknown")
+
+    return f"{date} {description}\n{account_from} -> {account_to}\nСумма: {amount} {currency}"
+
 
 def main():
     """
@@ -89,13 +106,18 @@ def main():
             return
         order = input("Сортировать по возрастанию или по убыванию? ").strip().lower()
         ascending = order == "по возрастанию"
-        transactions = sort_by_date(transactions, ascending)
+        try:
+            transactions = sort_by_date(transactions, ascending)
+        except ValueError as e:
+            print(f"Ошибка сортировки: {e}")
+            return
 
     currency_filter = input("Выводить только рублевые транзакции? (Да/Нет): ").strip().lower()
     if currency_filter == "да":
         transactions = [t for t in transactions if t.get("currency_name") == "RUB"]
 
-    search_choice = input("Отфильтровать список транзакций по определенному слову в описании? (Да/Нет): ").strip().lower()
+    search_choice = input(
+        "Отфильтровать список транзакций по определенному слову в описании? (Да/Нет): ").strip().lower()
     if search_choice == "да":
         search_term = input("Введите слово для поиска: ").strip()
         transactions = search_transactions_by_description(transactions, search_term)
@@ -107,7 +129,8 @@ def main():
     print("Распечатываю итоговый список транзакций...")
     print(f"Всего банковских операций в выборке: {len(transactions)}")
     for transaction in transactions:
-        print(transaction)
+        print(format_transaction(transaction))
+
 
 if __name__ == "__main__":
     main()

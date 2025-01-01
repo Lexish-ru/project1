@@ -1,5 +1,7 @@
 from typing import Any, Dict, List
 
+import re
+
 import pandas as pd
 
 
@@ -58,8 +60,13 @@ def read_transactions_from_excel(file_path: str) -> List[Dict[str, str]]:
         raise ValueError(f"Ошибка при чтении Excel-файла: {e}")
 
 
-# Тестовая функция для проверки корректности работы
-if __name__ == "__main__":
-    test_file = "data/transactions_excel.xlsx"
-    result = read_transactions_from_excel(test_file)
-    print(result[:2])  # Вывод первых двух записей
+def search_transactions_by_description(transactions: List[Dict[str, str]], search_term: str) -> List[Dict[str, str]]:
+    """
+    Поиск транзакций по строке в описании.
+
+    :param transactions: Список словарей с данными о транзакциях.
+    :param search_term: Строка для поиска в описании транзакций.
+    :return: Список транзакций, содержащих строку поиска в поле description.
+    """
+    pattern = re.compile(re.escape(search_term), re.IGNORECASE)
+    return [transaction for transaction in transactions if pattern.search(transaction.get('description', ''))]

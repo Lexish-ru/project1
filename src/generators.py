@@ -4,14 +4,14 @@ from typing import Dict, Generator, List
 def filter_by_currency(transactions: List[Dict], currency: str) -> Generator[Dict, None, None]:
     """Генератор для фильтрации транзакций по валюте"""
     for transaction in transactions:
-        if transaction.get('operationAmount', {}).get('currency', {}).get('code') == currency:
+        if transaction.get("operationAmount", {}).get("currency", {}).get("code") == currency:
             yield transaction
 
 
 def transaction_descriptions(transactions: List[Dict]) -> Generator[str, None, None]:
     """Генератор для получения описания транзакции"""
     for transaction in transactions:
-        yield transaction.get('description', '')
+        yield transaction.get("description", "")
 
 
 def card_number_generator(start: int, end: int) -> Generator[str, None, None]:

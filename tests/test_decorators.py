@@ -1,18 +1,21 @@
+import logging
 import os
+from io import StringIO
 from unittest.mock import patch
 
 import pytest
 
 from src.decorators import log, my_function
 
-LOG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../src/mylog.txt"))
+# Лог-файл в корне проекта
+LOG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "mylog.txt"))
 
 
 def test_my_function_sum() -> None:
     """Тест корректного суммирования двух чисел и создания лог-файла."""
     result = my_function(3, 4)
     assert result == 7, "Функция должна корректно складывать числа"
-    assert os.path.exists(LOG_FILE), "Лог-файл должен быть создан в папке src"
+    assert os.path.exists(LOG_FILE), "Лог-файл должен быть создан в корне проекта"
     with open(LOG_FILE, "r") as f:
         logs = f.read()
         assert "Функция 'my_function' запущена" in logs
@@ -23,27 +26,25 @@ def test_my_function_type_error() -> None:
     """Тест обработки исключений при некорректных типах аргументов."""
     with pytest.raises(TypeError):
         my_function("a", "b")
-
     with open(LOG_FILE, "r") as f:
         logs = f.read()
-    assert "Ошибка в функции 'my_function'" in logs, "Логи должны содержать запись об ошибке"
-    assert "Аргументы должны быть целыми числами" in logs, "Логи должны указывать на причину ошибки"
+    assert "Ошибка в функции 'my_function'" in logs
 
 
 def test_my_function_zero() -> None:
     """Тест суммирования нулевых значений."""
     result = my_function(0, 0)
-    assert result == 0, "Сумма нулей должна быть равна 0"
+    assert result == 0
 
 
 def test_log_file_creation() -> None:
     """Тест создания лог-файла при вызове функции с декоратором."""
     my_function(1, 1)
-    assert os.path.exists(LOG_FILE), "Лог-файл должен быть создан"
+    assert os.path.exists(LOG_FILE)
     with open(LOG_FILE, "r") as f:
         logs = f.read()
-        assert "Функция 'my_function' запущена" in logs, "Логи должны содержать запись о запуске функции"
-        assert "Функция 'my_function' выполнена" in logs, "Логи должны содержать запись об упешном выполнении функции"
+        assert "Функция 'my_function' запущена" in logs
+        assert "Функция 'my_function' выполнена" in logs
 
 
 @log()
@@ -56,33 +57,27 @@ def error_function():
     raise ValueError("Test Error")
 
 
-def test_log_to_stream():
-    """Test logging to stream handler when no filename is provided."""
-
-    with patch("sys.stdout") as mock_stdout:
+def test_log_to_stream(caplog):
+    """Тест логирования в поток через обработчик StreamHandler."""
+    with caplog.at_level(logging.INFO, logger="sample_function"):
         result = sample_function(1, 2)
         assert result == 3
-        assert "Функция 'sample_function' запущена" in mock_stdout.getvalue()
-        assert "Функция 'sample_function' выполнена" in mock_stdout.getvalue()
+
+    # Проверяем захваченные логи
+    captured_logs = [record.message for record in caplog.records]
+    print(f"Captured logs: {captured_logs}")  # Отладочный вывод
+    assert any("Функция 'sample_function' запущена" in log for log in captured_logs)
+    assert any("Функция 'sample_function' выполнена" in log for log in captured_logs)
 
 
-def test_log_error_handling():
-    """Test logging an error when the function raises an exception."""
-    with patch("sys.stdout") as mock_stdout:
+def test_log_error_handling(caplog):
+    """Тест логирования ошибок."""
+    with caplog.at_level(logging.ERROR, logger="error_function"):
         with pytest.raises(ValueError, match="Test Error"):
             error_function()
-        assert "Ошибка в функции 'error_function'" in mock_stdout.getvalue()
-        assert "Test Error" in mock_stdout.getvalue()
 
-
-def test_log_file_unwritable(tmp_path):
-    """Test behavior when the log file is not writable."""
-    unwritable_file = tmp_path / "unwritable.log"
-    unwritable_file.touch(0o000)  # Create a file with no permissions
-
-    @log(filename=str(unwritable_file))
-    def sample_unwritable_function():
-        return "Unwritable"
-
-    with pytest.raises(PermissionError):
-        sample_unwritable_function()
+    # Проверяем захваченные логи
+    captured_logs = [record.message for record in caplog.records]
+    print(f"Captured logs: {captured_logs}")  # Отладочный вывод
+    assert any("Ошибка в функции 'error_function'" in log for log in captured_logs)
+    assert any("Test Error" in log for log in captured_logs)

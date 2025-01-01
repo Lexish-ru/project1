@@ -19,9 +19,10 @@ def log(filename: Optional[str] = None) -> Callable[[Callable[..., Any]], Callab
                 logger.handlers.clear()
 
             if filename:
-                base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../src"))
-                os.makedirs(base_dir, exist_ok=True)
-                abs_path = os.path.join(base_dir, filename)
+                # Используем корень проекта для сохранения логов
+                project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+                os.makedirs(project_root, exist_ok=True)
+                abs_path = os.path.join(project_root, filename)
 
                 file_handler = logging.FileHandler(abs_path, mode="a")
                 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")

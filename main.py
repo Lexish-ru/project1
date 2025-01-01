@@ -1,5 +1,6 @@
 import json
 import csv
+import os
 from typing import List
 from src.processing import (
     read_transactions_from_csv,
@@ -21,16 +22,49 @@ def main():
 
     choice = input("Введите номер пункта меню: ").strip()
 
+    data_dir = os.path.join(os.getcwd(), 'data')
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+        print("Папка 'data' создана. Разместите файл для обработки в папку data в корне проекта.")
+        return
+
     if choice == "1":
-        file_path = input("Введите путь к JSON-файлу: ").strip()
-        with open(file_path, "r", encoding="utf-8") as f:
-            transactions = json.load(f)
+        file_name = input("Введите имя JSON-файла (расположенного в папке 'data'): ").strip()
+        file_path = os.path.join(data_dir, file_name)
+        if not os.path.exists(file_path):
+            print(f"Файл '{file_name}' не найден в папке 'data'. Завершение работы.")
+            return
+        if not file_name.endswith(".json"):
+            print("Ошибка: выберите файл с расширением '.json'.")
+            return
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                transactions = json.load(f)
+        except json.JSONDecodeError:
+            print(f"Ошибка: файл '{file_name}' содержит некорректные данные JSON.")
+            return
     elif choice == "2":
-        file_path = input("Введите путь к CSV-файлу: ").strip()
-        transactions = read_transactions_from_csv(file_path)
+        file_name = input("Введите имя CSV-файла (расположенного в папке 'data'): ").strip()
+        file_path = os.path.join(data_dir, file_name)
+        if not os.path.exists(file_path):
+            print(f"Файл '{file_name}' не найден в папке 'data'. Завершение работы.")
+            return
+        try:
+            transactions = read_transactions_from_csv(file_path)
+        except Exception as e:
+            print(f"Ошибка: файл '{file_name}' содержит некорректные данные CSV. Детали: {e}")
+            return
     elif choice == "3":
-        file_path = input("Введите путь к XLSX-файлу: ").strip()
-        transactions = read_transactions_from_excel(file_path)
+        file_name = input("Введите имя XLSX-файла (расположенного в папке 'data'): ").strip()
+        file_path = os.path.join(data_dir, file_name)
+        if not os.path.exists(file_path):
+            print(f"Файл '{file_name}' не найден в папке 'data'. Завершение работы.")
+            return
+        try:
+            transactions = read_transactions_from_excel(file_path)
+        except Exception as e:
+            print(f"Ошибка: файл '{file_name}' содержит некорректные данные XLSX. Детали: {e}")
+            return
     else:
         print("Некорректный выбор. Завершение работы.")
         return
@@ -50,6 +84,9 @@ def main():
 
     sort_choice = input("Отсортировать операции по дате? (Да/Нет): ").strip().lower()
     if sort_choice == "да":
+        if not all("date" in transaction for transaction in transactions):
+            print("Невозможно отсортировать транзакции: отсутствует поле 'date'.")
+            return
         order = input("Сортировать по возрастанию или по убыванию? ").strip().lower()
         ascending = order == "по возрастанию"
         transactions = sort_by_date(transactions, ascending)

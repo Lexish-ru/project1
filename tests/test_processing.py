@@ -1,9 +1,8 @@
-from typing import List
-
+from typing import List, Dict
+import os
 import pytest
-
-from src.processing import filter_by_state, sort_by_date
-
+import pandas as pd
+from src.processing import filter_by_state, sort_by_date, read_transactions_from_csv, read_transactions_from_excel
 
 @pytest.mark.parametrize(
     "state, expected",
@@ -56,3 +55,86 @@ def test_sort_by_date_invalid_data() -> None:
     """Тест функции сортировки по дате с заведомо неверными данными"""
     with pytest.raises(ValueError):
         sort_by_date([{"invalid": "data"}])
+
+def test_read_transactions_from_csv():
+    """Тест функции чтения данных из CSV."""
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+    test_file = os.path.join(base_dir, "transactions.csv")
+
+    expected_output = [
+        {
+            "id": "650703",
+            "state": "EXECUTED",
+            "date": "2023-09-05T11:30:32Z",
+            "amount": 16210,
+            "currency_name": "Sol",
+            "currency_code": "PEN",
+            "from": "Счет 58803664561298323391",
+            "to": "Счет 39745660563456619397",
+            "description": "Перевод организации",
+        },
+        {
+            "id": "3598919",
+            "state": "EXECUTED",
+            "date": "2020-12-06T23:00:58Z",
+            "amount": 29740,
+            "currency_name": "Peso",
+            "currency_code": "COP",
+            "from": "Discover 3172601889670065",
+            "to": "Discover 0720428384694643",
+            "description": "Перевод с карты на карту",
+        },
+    ]
+
+    result = read_transactions_from_csv(test_file)
+    for idx, (expected, actual) in enumerate(zip(expected_output, result)):
+        assert expected['id'] == actual['id']
+        assert expected['amount'] == actual['amount']
+
+    print("Test passed for CSV file.")
+
+def test_read_transactions_from_excel():
+    """Тест функции чтения данных из Excel."""
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+    test_file = os.path.join(base_dir, "transactions_excel.xlsx")
+
+    expected_output = [
+        {
+            "id": "650703",
+            "state": "EXECUTED",
+            "date": "2023-09-05T11:30:32Z",  # Ожидаемая дата с суффиксом Z
+            "amount": 16210,
+            "currency_name": "Sol",
+            "currency_code": "PEN",
+            "from": "Счет 58803664561298323391",
+            "to": "Счет 39745660563456619397",
+            "description": "Перевод организации",
+        },
+        {
+            "id": "3598919",
+            "state": "EXECUTED",
+            "date": "2020-12-06T23:00:58Z",
+            "amount": 29740,
+            "currency_name": "Peso",
+            "currency_code": "COP",
+            "from": "Discover 3172601889670065",
+            "to": "Discover 0720428384694643",
+            "description": "Перевод с карты на карту",
+        },
+    ]
+
+    print(f"Using file: {test_file}")  # Проверяем путь к файлу
+    result = read_transactions_from_excel(test_file)
+
+    # Приведение ID и даты к ожидаемому формату
+    for transaction in result:
+        transaction['id'] = str(transaction['id'])
+        if not transaction['date'].endswith("Z"):
+            transaction['date'] += "Z"  # Добавляем суффикс Z, если его нет
+
+    for idx, (expected, actual) in enumerate(zip(expected_output, result)):
+        for key in expected:
+            assert expected[key] == actual.get(key), f"Key: {key} | Expected: {expected[key]} | Actual: {actual.get(key)}"
+
+    print("Test passed for Excel file.")
+

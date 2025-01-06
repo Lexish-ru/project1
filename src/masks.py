@@ -25,9 +25,9 @@ def mask_bank_account(bank_account: str) -> str:
     """
     BANK_ACCOUNT_LENGTH = 20
 
-    if len(bank_account) != BANK_ACCOUNT_LENGTH or not bank_account.isdigit():
-        logger.error(f"Ошибка: некорректный номер банковского счета: {bank_account}")
-        raise ValueError("Неверный формат номера банковского счёта")
+    if not bank_account or len(bank_account) != BANK_ACCOUNT_LENGTH or not bank_account.isdigit():
+        logger.warning(f"Некорректный номер банковского счета: {bank_account}")
+        return "Некорректный счет"
 
     masked_account = f"**{bank_account[-4:]}"
     logger.info(f"Маскированный номер счета: {masked_account}")

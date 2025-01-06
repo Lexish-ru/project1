@@ -31,106 +31,84 @@ def main():
     """
     Основная функция программы для работы с банковскими транзакциями.
     """
-    print("Привет! Добро пожаловать в программу работы с банковскими транзакциями.")
-    print("Выберите необходимый пункт меню:")
-    print("1. Получить информацию о транзакциях из JSON-файла")
-    print("2. Получить информацию о транзакциях из CSV-файла")
-    print("3. Получить информацию о транзакциях из XLSX-файла")
+    try:
+        print("Привет! Добро пожаловать в программу работы с банковскими транзакциями.")
+        print("Выберите необходимый пункт меню:")
+        print("1. Получить информацию о транзакциях из JSON-файла")
+        print("2. Получить информацию о транзакциях из CSV-файла")
+        print("3. Получить информацию о транзакциях из XLSX-файла")
 
-    choice = input("Введите номер пункта меню: ").strip()
+        option = input("Ваш выбор: ").strip()
+        file_type = {'1': 'json', '2': 'csv', '3': 'xlsx'}.get(option)
 
-    data_dir = os.path.join(os.getcwd(), 'data')
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
-        print("Папка 'data' создана. Разместите файл для обработки в папку data в корне проекта.")
-        return
+        if not file_type:
+            raise ValueError("Некорректный выбор пункта меню.")
 
-    if choice == "1":
-        file_name = input("Введите имя JSON-файла (расположенного в папке 'data'): ").strip()
-        file_path = os.path.join(data_dir, file_name)
+        print("Пожалуйста, поместите файл в папку 'data' в корне проекта.")
+        file_name = input("Введите имя файла (с расширением): ").strip()
+        file_path = os.path.join("data", file_name)
+
         if not os.path.exists(file_path):
-            print(f"Файл '{file_name}' не найден в папке 'data'. Завершение работы.")
-            return
-        if not file_name.endswith(".json"):
-            print("Ошибка: выберите файл с расширением '.json'.")
-            return
-        try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                transactions = json.load(f)
-        except json.JSONDecodeError:
-            print(f"Ошибка: файл '{file_name}' содержит некорректные данные JSON.")
-            return
-    elif choice == "2":
-        file_name = input("Введите имя CSV-файла (расположенного в папке 'data'): ").strip()
-        file_path = os.path.join(data_dir, file_name)
-        if not os.path.exists(file_path):
-            print(f"Файл '{file_name}' не найден в папке 'data'. Завершение работы.")
-            return
-        try:
+            raise FileNotFoundError(f"Файл '{file_name}' не найден в папке 'data'.")
+
+        if file_type == 'json':
+            with open(file_path, 'r', encoding='utf-8') as file:
+                transactions = json.load(file)
+        elif file_type == 'csv':
             transactions = read_transactions_from_csv(file_path)
-        except Exception as e:
-            print(f"Ошибка: файл '{file_name}' содержит некорректные данные CSV. Детали: {e}")
-            return
-    elif choice == "3":
-        file_name = input("Введите имя XLSX-файла (расположенного в папке 'data'): ").strip()
-        file_path = os.path.join(data_dir, file_name)
-        if not os.path.exists(file_path):
-            print(f"Файл '{file_name}' не найден в папке 'data'. Завершение работы.")
-            return
-        try:
+        elif file_type == 'xlsx':
             transactions = read_transactions_from_excel(file_path)
-        except Exception as e:
-            print(f"Ошибка: файл '{file_name}' содержит некорректные данные XLSX. Детали: {e}")
-            return
-    else:
-        print("Некорректный выбор. Завершение работы.")
-        return
+        else:
+            raise NotImplementedError(f"Обработка формата {file_type} не поддерживается.")
 
-    while True:
-        status = input("Введите статус для фильтрации (EXECUTED, CANCELED, PENDING): ").strip().upper()
-        if status not in {"EXECUTED", "CANCELED", "PENDING"}:
-            print(f"Статус операции '{status}' недоступен.")
-            continue
-        transactions = filter_by_state(transactions, status)
-        print(f"Операции отфильтрованы по статусу '{status}'.")
-        break
+        print("Введите статус, по которому необходимо выполнить фильтрацию.")
+        print("Доступные для фильтровки статусы: EXECUTED, CANCELED, PENDING")
 
-    if not transactions:
-        print("Не найдено ни одной транзакции, подходящей под ваши условия фильтрации.")
-        return
+        valid_statuses = {'executed', 'canceled', 'pending'}
+        while True:
+            status = input("Введите статус: ").strip().lower()
+            if status in valid_statuses:
+                filtered_transactions = filter_by_state(transactions, status)
+                print(f"Операции отфильтрованы по статусу '{status.upper()}'.")
+                print(f"Текущая выборка содержит {len(filtered_transactions)} операций.")
+                break
+            else:
+                print(f'Статус операции "{status}" недоступен. Попробуйте снова.')
 
-    sort_choice = input("Отсортировать операции по дате? (Да/Нет): ").strip().lower()
-    if sort_choice == "да":
-        if not all("date" in transaction for transaction in transactions):
-            print("Невозможно отсортировать транзакции: отсутствует поле 'date'.")
-            return
-        order = input("Сортировать по возрастанию или по убыванию? ").strip().lower()
-        ascending = order == "по возрастанию"
-        try:
-            transactions = sort_by_date(transactions, ascending)
-        except ValueError as e:
-            print(f"Ошибка сортировки: {e}")
-            return
+        sort_choice = input("Отсортировать операции по дате? Да/Нет: ").strip().lower()
+        if sort_choice == 'да':
+            while True:
+                order = input("По возрастанию нажмите 1, по убыванию нажмите 2: ").strip()
+                if order == '1':
+                    reverse = False
+                    break
+                elif order == '2':
+                    reverse = True
+                    break
+                else:
+                    print("Некорректный выбор. Пожалуйста, выберите 1 или 2.")
+            filtered_transactions = sort_by_date(filtered_transactions, reverse)
+            print(f"Текущая выборка после сортировки содержит {len(filtered_transactions)} операций.")
 
-    currency_filter = input("Выводить только рублевые транзакции? (Да/Нет): ").strip().lower()
-    if currency_filter == "да":
-        transactions = [t for t in transactions if t.get("currency_name") == "RUB"]
+        currency_choice = input("Выводить только рублевые транзакции? Да/Нет: ").strip().lower()
+        if currency_choice == 'да':
+            filtered_transactions = [t for t in filtered_transactions if 'руб' in t.get('currency_name', '').lower()]
+            print(f"Текущая выборка после фильтрации по валюте содержит {len(filtered_transactions)} операций.")
 
-    search_choice = input(
-        "Отфильтровать список транзакций по определенному слову в описании? (Да/Нет): ").strip().lower()
-    if search_choice == "да":
-        search_term = input("Введите слово для поиска: ").strip()
-        transactions = search_transactions_by_description(transactions, search_term)
+        search_choice = input("Отфильтровать список транзакций по определенному слову в описании? Да/Нет: ").strip().lower()
+        if search_choice == 'да':
+            search_word = input("Введите слово для поиска: ").strip()
+            filtered_transactions = search_transactions_by_description(filtered_transactions, search_word)
+            print(f"Текущая выборка после фильтрации по описанию содержит {len(filtered_transactions)} операций.")
 
-    if not transactions:
-        print("Не найдено ни одной транзакции, подходящей под ваши условия фильтрации.")
-        return
-
-    print("Распечатываю итоговый список транзакций...")
-    print(f"Всего банковских операций в выборке: {len(transactions)}")
-    for transaction in transactions:
-        print(format_transaction(transaction))
-
+        if not filtered_transactions:
+            print("Не найдено ни одной транзакции, подходящей под ваши условия фильтрации.")
+        else:
+            print(f"Всего банковских операций в выборке: {len(filtered_transactions)}")
+            for t in filtered_transactions:
+                print(format_transaction(t))
+    except Exception as e:
+        print(f"Произошла ошибка: {e}")
 
 if __name__ == "__main__":
     main()

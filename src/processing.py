@@ -7,9 +7,11 @@ import pandas as pd
 
 def filter_by_state(transactions: list[dict], state: str = "EXECUTED") -> list[dict]:
     """Функция фильтрации транзакций по признаку 'STATE'"""
-    if state not in ["CANCELED", "EXECUTED"]:
+    valid_states = ["CANCELED", "EXECUTED", "PENDING"]
+    state = state.upper()  # Приведение статуса к верхнему регистру
+    if state not in valid_states:
         return []
-    filtered_transactions = [transaction for transaction in transactions if transaction.get("state") == state]
+    filtered_transactions = [transaction for transaction in transactions if transaction.get("state", "").upper() == state]
     return filtered_transactions
 
 
@@ -24,11 +26,7 @@ def sort_by_date(transactions: List[Dict[str, Any]], reverse: bool = True) -> Li
 
 
 def read_transactions_from_csv(file_path: str) -> List[Dict[str, str]]:
-    """Считывает транзакции из CSV-файла.
-
-    :param file_path: Путь к файлу CSV.
-    :return: Список транзакций в виде словарей.
-    """
+    """Считывает транзакции из CSV-файла."""
     try:
         data = pd.read_csv(file_path, sep=";", keep_default_na=False)
 
@@ -47,11 +45,7 @@ def read_transactions_from_csv(file_path: str) -> List[Dict[str, str]]:
 
 
 def read_transactions_from_excel(file_path: str) -> List[Dict[str, str]]:
-    """Считывает транзакции из Excel-файла.
-
-    :param file_path: Путь к файлу Excel.
-    :return: Список транзакций в виде словарей.
-    """
+    """Считывает транзакции из Excel-файла."""
     try:
         # Читаем данные из Excel
         data = pd.read_excel(file_path, engine="openpyxl", keep_default_na=False)
@@ -60,25 +54,15 @@ def read_transactions_from_excel(file_path: str) -> List[Dict[str, str]]:
         raise ValueError(f"Ошибка при чтении Excel-файла: {e}")
 
 
-def search_transactions_by_description(transactions: List[Dict[str, str]], search_term: str) -> List[Dict[str, str]]:
-    """
-    Поиск транзакций по строке в описании.
+def search_transactions_by_description(transactions: List[Dict[str, Any]], search_string: str) -> List[Dict[str, Any]]:
+    """Функция поиска транзакций по описанию"""
+    pattern = re.compile(re.escape(search_string), re.IGNORECASE)
+    return [transaction for transaction in transactions if pattern.search(transaction.get("description", ""))]
 
-    :param transactions: Список словарей с данными о транзакциях.
-    :param search_term: Строка для поиска в описании транзакций.
-    :return: Список транзакций, содержащих строку поиска в поле description.
-    """
-    pattern = re.compile(re.escape(search_term), re.IGNORECASE)
-    return [transaction for transaction in transactions if pattern.search(transaction.get('description', ''))]
 
 def categorize_transactions_by_description(transactions: List[Dict[str, str]], categories: List[str]) -> Dict[str, int]:
     """
-    Подсчет категорий транзакций на основе описания.
-
-    :param transactions: Список словарей с данными о транзакциях.
-    :param categories: Список категорий для подсчета.
-    :return: Словарь, где ключи - категории, а значения - количество транзакций в каждой категории.
-    """
+    Подсчет категорий транзакций на основе описания."""
     category_counts = {category: 0 for category in categories}
     for transaction in transactions:
         description = transaction.get('description', '').lower()

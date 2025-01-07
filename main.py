@@ -7,8 +7,7 @@ from src.processing import (
     sort_by_date,
     search_transactions_by_description,
 )
-from src.masks import mask_bank_account
-from src.widget import get_date
+from src.widget import get_date, mask_card_account
 
 
 def format_transaction(transaction):
@@ -19,8 +18,8 @@ def format_transaction(transaction):
     """
     date = get_date(transaction.get("date", ""))
     description = transaction.get("description", "Нет описания")
-    account_from = mask_bank_account(transaction.get("from", ""))
-    account_to = mask_bank_account(transaction.get("to", ""))
+    account_from = mask_card_account(transaction.get("from", ""))
+    account_to = mask_card_account(transaction.get("to", ""))
     amount = transaction.get("amount", 0)
     currency = transaction.get("currency_name", "Unknown")
 

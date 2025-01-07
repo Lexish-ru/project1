@@ -4,6 +4,11 @@ import re
 
 import pandas as pd
 
+from src.logger import setup_logger
+
+# Настраиваем логгер
+logger = setup_logger(name="processing", log_file="logs/processing.log")
+
 
 def filter_by_state(transactions: list[dict], state: str = "EXECUTED") -> list[dict]:
     """Функция фильтрации транзакций по признаку 'STATE'"""
@@ -16,17 +21,40 @@ def filter_by_state(transactions: list[dict], state: str = "EXECUTED") -> list[d
 
 
 def sort_by_date(transactions: List[Dict[str, Any]], reverse: bool = True) -> List[Dict[str, Any]]:
-    """Функция сортировки по дате"""
-    if not isinstance(transactions, list) or not all(isinstance(item, dict) for item in transactions):
-        raise ValueError("Предоставленные данные не являются списком транзакций")
-    for attribute in transactions:
-        if not isinstance(attribute.get("date"), str):
-            raise ValueError("Предоставленные данные не содержат даты")
-    return sorted(transactions, key=lambda transaction: transaction.get("date", ""), reverse=reverse)
+    """
+    Функция сортировки транзакций по дате.
+    """
+    valid_transactions = []
+    invalid_transactions = []
+
+    for transaction in transactions:
+        date = transaction.get("date")
+        if isinstance(date, str) and date:
+            valid_transactions.append(transaction)
+        else:
+            logger.warning(f"Некорректная дата в транзакции: {transaction}")
+            invalid_transactions.append(transaction)
+
+    sorted_transactions = sorted(valid_transactions, key=lambda t: t["date"], reverse=reverse)
+
+    if invalid_transactions:
+        logger.warning(f"Всего {len(invalid_transactions)} транзакций пропущено из-за некорректной даты.")
+
+    return sorted_transactions
+
+
+def search_transactions_by_description(transactions: List[Dict[str, Any]], search_string: str) -> List[Dict[str, Any]]:
+    """Функция поиска транзакций по описанию"""
+    pattern = re.compile(re.escape(search_string), re.IGNORECASE)
+    return [transaction for transaction in transactions if pattern.search(transaction.get("description", ""))]
 
 
 def read_transactions_from_csv(file_path: str) -> List[Dict[str, str]]:
-    """Считывает транзакции из CSV-файла."""
+    """Считывает транзакции из CSV-файла.
+
+    :param file_path: Путь к файлу CSV.
+    :return: Список транзакций в виде словарей.
+    """
     try:
         data = pd.read_csv(file_path, sep=";", keep_default_na=False)
 
@@ -52,12 +80,6 @@ def read_transactions_from_excel(file_path: str) -> List[Dict[str, str]]:
         return data.to_dict(orient="records")
     except Exception as e:
         raise ValueError(f"Ошибка при чтении Excel-файла: {e}")
-
-
-def search_transactions_by_description(transactions: List[Dict[str, Any]], search_string: str) -> List[Dict[str, Any]]:
-    """Функция поиска транзакций по описанию"""
-    pattern = re.compile(re.escape(search_string), re.IGNORECASE)
-    return [transaction for transaction in transactions if pattern.search(transaction.get("description", ""))]
 
 
 def categorize_transactions_by_description(transactions: List[Dict[str, str]], categories: List[str]) -> Dict[str, int]:

@@ -1,4 +1,5 @@
 from src.masks import mask_bank_account, mask_card_number
+import pandas as pd
 
 
 def mask_card_account(number_import: str) -> str:
@@ -18,16 +19,21 @@ def mask_card_account(number_import: str) -> str:
         raise ValueError("Некорректные данные")
 
 
-def get_date(date: str) -> str:
+def get_date(date: str | pd.Timestamp | None) -> str:
     """Функция конвертации даты"""
+    if date is None:
+        return "Неизвестно"
+    if isinstance(date, pd.Timestamp):
+        return date.strftime("%d.%m.%Y")
     if not isinstance(date, str) or len(date) < 10:
-        raise ValueError("Некорректная дата")
+        return "Неизвестно"
     try:
         year = int(date[0:4])
         month = int(date[5:7])
         day = int(date[8:10])
         if not (1 <= month <= 12 and 1 <= day <= 31):
-            raise ValueError("Некорректная дата")
+            return "Неизвестно"
         return f"{day:02}.{month:02}.{year}"
     except (ValueError, IndexError, TypeError):
-        raise ValueError("Некорректная дата")
+        return "Неизвестно"
+

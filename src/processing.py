@@ -1,14 +1,11 @@
-from typing import Any, Dict, List
-
 import re
-
+from typing import List, Dict, Any
+from collections import Counter
 import pandas as pd
-
 from src.logger import setup_logger
 
 # Настраиваем логгер
 logger = setup_logger(name="processing", log_file="logs/processing.log")
-
 
 def filter_by_state(transactions: list[dict], state: str = "EXECUTED") -> list[dict]:
     """Функция фильтрации транзакций по признаку 'STATE'"""
@@ -23,18 +20,32 @@ def filter_by_state(transactions: list[dict], state: str = "EXECUTED") -> list[d
 def sort_by_date(transactions: List[Dict[str, Any]], reverse: bool = True) -> List[Dict[str, Any]]:
     """
     Функция сортировки транзакций по дате.
+
+    :param transactions: Список транзакций.
+    :param reverse: Порядок сортировки (True для убывания, False для возрастания).
+    :return: Отсортированный список транзакций.
     """
     valid_transactions = []
     invalid_transactions = []
 
     for transaction in transactions:
         date = transaction.get("date")
-        if isinstance(date, str) and date:
-            valid_transactions.append(transaction)
+        if isinstance(date, (str, pd.Timestamp)):
+            try:
+                # Преобразуем строковые даты в pandas.Timestamp для унификации
+                if isinstance(date, str):
+                    date = pd.Timestamp(date)
+                    transaction["date"] = date  # Обновляем дату в транзакции
+
+                valid_transactions.append(transaction)
+            except Exception:
+                logger.warning(f"Некорректная дата в транзакции: {transaction}")
+                invalid_transactions.append(transaction)
         else:
             logger.warning(f"Некорректная дата в транзакции: {transaction}")
             invalid_transactions.append(transaction)
 
+    # Сортировка по дате
     sorted_transactions = sorted(valid_transactions, key=lambda t: t["date"], reverse=reverse)
 
     if invalid_transactions:
@@ -43,10 +54,35 @@ def sort_by_date(transactions: List[Dict[str, Any]], reverse: bool = True) -> Li
     return sorted_transactions
 
 
-def search_transactions_by_description(transactions: List[Dict[str, Any]], search_string: str) -> List[Dict[str, Any]]:
-    """Функция поиска транзакций по описанию"""
-    pattern = re.compile(re.escape(search_string), re.IGNORECASE)
+def search_transactions_by_regex(transactions: List[Dict], search_term: str) -> List[Dict]:
+    """
+    Ищет транзакции, где описание содержит заданную строку поиска.
+
+    :param transactions: Список транзакций (словарей).
+    :param search_term: Строка поиска.
+    :return: Список транзакций, где описание содержит строку поиска.
+    """
+    pattern = re.compile(re.escape(search_term), re.IGNORECASE)
     return [transaction for transaction in transactions if pattern.search(transaction.get("description", ""))]
+
+
+def count_transactions_by_category(transactions: List[Dict], categories: List[str]) -> Dict[str, int]:
+    """
+    Считает количество операций для каждой категории из списка категорий.
+
+    :param transactions: Список транзакций (словарей).
+    :param categories: Список категорий.
+    :return: Словарь с количеством операций по каждой категории.
+    """
+    category_counts = Counter()
+
+    for transaction in transactions:
+        description = transaction.get("description", "").lower()
+        for category in categories:
+            if category.lower() in description:
+                category_counts[category] += 1
+
+    return dict(category_counts)
 
 
 def read_transactions_from_csv(file_path: str) -> List[Dict[str, str]]:

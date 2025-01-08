@@ -6,8 +6,7 @@ from src.processing import (
     search_transactions_by_regex,
     count_transactions_by_category,
 )
-from src.masks import mask_card_number, mask_bank_account
-from src.widget import get_date
+from src.widget import get_date, mask_card_account
 
 
 def main():
@@ -71,43 +70,50 @@ def main():
             ruble_aliases = {"RUB", "руб.", "ruble"}
             transactions = [
                 t for t in transactions
-                if t.get("currency_code", "").upper() in ruble_aliases or
-                   t.get("currency_name", "").lower() in map(str.lower, ruble_aliases)
+                if (
+                        t.get("operationAmount", {}).get("currency", {}).get("code", "").lower() in map(str.lower,
+                                                                                                        ruble_aliases)
+                        or t.get("operationAmount", {}).get("currency", {}).get("name", "").lower() in map(str.lower,
+                                                                                                           ruble_aliases)
+                        or t.get("currency_code", "").upper() in ruble_aliases
+                        or t.get("currency_name", "").lower() in map(str.lower, ruble_aliases)
+                )
             ]
 
         print("\nРаспечатываю итоговый список транзакций:")
         for t in transactions:
-            date_raw = t.get("date", "Неизвестно")
-            try:
-                date = pd.Timestamp(date_raw).strftime("%d.%m.%Y") if date_raw != "Неизвестно" else "Неизвестно"
-            except Exception:
-                date = "Неизвестно"
-
+            date = get_date(t.get("date", "Неизвестно"))
             description = t.get("description", "Неизвестно")
-            amount = t.get("operationAmount", {}).get("amount", "Неизвестно")
-            currency = t.get("operationAmount", {}).get("currency", {}).get("code", "Неизвестно")
+            amount = (
+                t.get("operationAmount", {}).get("amount", "Неизвестно")
+                if "operationAmount" in t
+                else t.get("amount", "Неизвестно")
+            )
+            currency = (
+                t.get("operationAmount", {}).get("currency", {}).get("code", "Неизвестно")
+                if "operationAmount" in t
+                else t.get("currency_code", "Неизвестно")
+            )
 
-            from_account = t.get("from", "").strip()
-            to_account = t.get("to", "").strip()
+            from_account = t.get("from", "Неизвестно").strip()
+            to_account = t.get("to", "Неизвестно").strip()
 
-            if "Счет" in from_account:
-                from_account = f"Счет {mask_bank_account(from_account[-20:])}"
-            elif from_account:
-                from_account = mask_card_number(from_account[-16:])
+            # Маскируем данные через функцию mask_card_account
+            try:
+                masked_from_account = mask_card_account(from_account)
+            except ValueError:
+                masked_from_account = "Некорректные данные"
 
-            if "Счет" in to_account:
-                to_account = f"Счет {mask_bank_account(to_account[-20:])}"
-            elif to_account:
-                to_account = mask_card_number(to_account[-16:])
+            try:
+                masked_to_account = mask_card_account(to_account)
+            except ValueError:
+                masked_to_account = "Некорректные данные"
 
+            # Вывод транзакции
             print(f"{date} {description}")
-            if from_account and to_account:
-                print(f"{from_account} -> {to_account}")
-            elif from_account:
-                print(from_account)
-            elif to_account:
-                print(to_account)
+            print(f"{masked_from_account} -> {masked_to_account}")
             print(f"Сумма: {amount} {currency}\n")
+
 
 if __name__ == "__main__":
     main()

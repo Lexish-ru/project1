@@ -28,12 +28,11 @@ def get_date(date: str | pd.Timestamp | None) -> str:
     if not isinstance(date, str) or len(date) < 10:
         return "Неизвестно"
     try:
-        year = int(date[0:4])
-        month = int(date[5:7])
-        day = int(date[8:10])
-        if not (1 <= month <= 12 and 1 <= day <= 31):
-            return "Неизвестно"
-        return f"{day:02}.{month:02}.{year}"
-    except (ValueError, IndexError, TypeError):
+        # Попытка распознать дату через pandas
+        parsed_date = pd.Timestamp(date)
+        return parsed_date.strftime("%d.%m.%Y")  # Возвращаем только дату
+    except (ValueError, TypeError):
+        # Если дата некорректная или неподдерживаемая
         return "Неизвестно"
+
 

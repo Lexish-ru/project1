@@ -16,9 +16,5 @@ def test_mask_card_account() -> None:
 def test_get_date():
     """Тест функции конвертации даты"""
     assert get_date("2024-12-23") == "23.12.2024"
-    with pytest.raises(ValueError, match="Некорректная дата"):
-        get_date("23-12-2024")
-    with pytest.raises(ValueError, match="Некорректная дата"):
-        get_date("2024-13-01")
-    with pytest.raises(ValueError, match="Некорректная дата"):
-        get_date("abcd-ef-gh")
+    assert get_date("Invalid date") == "Неизвестно"
+

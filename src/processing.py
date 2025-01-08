@@ -17,50 +17,27 @@ def filter_by_state(transactions: list[dict], state: str = "EXECUTED") -> list[d
     return filtered_transactions
 
 
-def sort_by_date(transactions: List[Dict[str, Any]], reverse: bool = True) -> List[Dict[str, Any]]:
-    """
-    Функция сортировки транзакций по дате.
+import warnings
 
-    :param transactions: Список транзакций.
-    :param reverse: Порядок сортировки (True для убывания, False для возрастания).
-    :return: Отсортированный список транзакций.
-    """
+def sort_by_date(transactions: list, reverse: bool = False) -> list:
     valid_transactions = []
-    invalid_transactions = []
-
     for transaction in transactions:
-        date = transaction.get("date")
-        if isinstance(date, (str, pd.Timestamp)):
-            try:
-                # Преобразуем строковые даты в pandas.Timestamp для унификации
-                if isinstance(date, str):
-                    date = pd.Timestamp(date)
-                    transaction["date"] = date  # Обновляем дату в транзакции
-
+        try:
+            if "date" in transaction:
+                transaction["date"] = pd.Timestamp(transaction["date"]).isoformat()
                 valid_transactions.append(transaction)
-            except Exception:
-                logger.warning(f"Некорректная дата в транзакции: {transaction}")
-                invalid_transactions.append(transaction)
-        else:
-            logger.warning(f"Некорректная дата в транзакции: {transaction}")
-            invalid_transactions.append(transaction)
+            else:
+                raise KeyError("Missing 'date' key")
+        except Exception as e:
+            warnings.warn(f"Некорректная дата в транзакции: {transaction}", UserWarning)
+    return sorted(valid_transactions, key=lambda x: x["date"], reverse=reverse)
 
-    # Сортировка по дате
-    sorted_transactions = sorted(valid_transactions, key=lambda t: t["date"], reverse=reverse)
 
-    if invalid_transactions:
-        logger.warning(f"Всего {len(invalid_transactions)} транзакций пропущено из-за некорректной даты.")
-
-    return sorted_transactions
 
 
 def search_transactions_by_regex(transactions: List[Dict], search_term: str) -> List[Dict]:
     """
     Ищет транзакции, где описание содержит заданную строку поиска.
-
-    :param transactions: Список транзакций (словарей).
-    :param search_term: Строка поиска.
-    :return: Список транзакций, где описание содержит строку поиска.
     """
     pattern = re.compile(re.escape(search_term), re.IGNORECASE)
     return [transaction for transaction in transactions if pattern.search(transaction.get("description", ""))]

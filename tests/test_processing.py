@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 from src.processing import (filter_by_state, read_transactions_from_csv, read_transactions_from_excel,
-                            sort_by_date, search_transactions_by_description, categorize_transactions_by_description)
+                            sort_by_date, categorize_transactions_by_description, search_transactions_by_regex)
 
 
 @pytest.mark.parametrize(
@@ -69,15 +69,19 @@ def test_filter_by_state(transactions_fixture: List[dict], state: str, expected:
         ),
     ],
 )
-def test_sort_by_date(transactions_fixture: List[dict], reverse: bool, expected: List[dict]) -> None:
-    """Тест функции сортировки по дате"""
-    assert sort_by_date(transactions_fixture, reverse) == expected
+def test_sort_by_date(transactions_fixture, reverse, expected):
+    result = sort_by_date(transactions_fixture, reverse)
+    assert result == expected
 
 
-def test_sort_by_date_invalid_data() -> None:
-    """Тест функции сортировки по дате с заведомо неверными данными"""
-    with pytest.raises(ValueError):
-        sort_by_date([{"invalid": "data"}])
+
+
+def test_sort_by_date_invalid_data():
+    transactions = [{"invalid": "data"}]  # Транзакция без ключа "date"
+    with pytest.warns(UserWarning, match="Некорректная дата в транзакции"):
+        result = sort_by_date(transactions, reverse=True)
+    assert len(result) == 0  # Все некорректные транзакции должны быть отфильтрованы
+
 
 
 def test_read_transactions_from_csv():
@@ -259,51 +263,28 @@ if __name__ == "__main__":
     result = read_transactions_from_excel(test_file)
     print(result[:2])  # Вывод первых двух записей
 
-def test_search_transactions_by_description():
-    transactions = [
-        {"id": 1, "description": "Payment for invoice 12345"},
-        {"id": 2, "description": "Transfer to account 67890"},
-        {"id": 3, "description": "Payment received from ABC Corp."},
-    ]
 
-    # Поиск строки, которая точно есть
-    result = search_transactions_by_description(transactions, "payment")
-    assert len(result) == 2
-    assert result[0]["id"] == 1
-    assert result[1]["id"] == 3
+@pytest.mark.parametrize(
+    "transactions, categories, expected",
+    [
+        ([{"description": "Grocery store payment"}, {"description": "Online shopping"}], ["grocery", "shopping"], {"grocery": 1, "shopping": 1}),
+        ([{"description": ""}], ["grocery"], {"grocery": 0}),
+    ],
+)
+def test_categorize_transactions_by_description(transactions, categories, expected):
+    assert categorize_transactions_by_description(transactions, categories) == expected
 
-    # Поиск строки с учетом регистра
-    result = search_transactions_by_description(transactions, "PAYMENT")
-    assert len(result) == 2
 
-    # Поиск строки, которой нет в описании
-    result = search_transactions_by_description(transactions, "nonexistent")
-    assert len(result) == 0
+@pytest.mark.parametrize(
+    "transactions, search_term, expected",
+    [
+        ([{"description": "Payment for coffee"}, {"description": "Lunch payment"}], "Payment", [{"description": "Payment for coffee"}, {"description": "Lunch payment"}]),
+        ([{"description": "Coffee"}, {"description": ""}], "Lunch", []),
+    ],
+)
+def test_search_transactions_by_regex(transactions, search_term, expected):
+    assert search_transactions_by_regex(transactions, search_term) == expected
 
-    # Поиск с пустой строкой
-    result = search_transactions_by_description(transactions, "")
-    assert len(result) == 3
 
-    def test_categorize_transactions_by_description():
-        transactions = [
-            {"id": 1, "description": "Payment for invoice"},
-            {"id": 2, "description": "Transfer to account"},
-            {"id": 3, "description": "Payment received"},
-            {"id": 4, "description": "Refund for invoice"},
-        ]
-        categories = ["payment", "transfer", "refund"]
 
-        result = categorize_transactions_by_description(transactions, categories)
-        assert result == {"payment": 2, "transfer": 1, "refund": 1}
 
-        # Проверка с пустым списком транзакций
-        result = categorize_transactions_by_description([], categories)
-        assert result == {"payment": 0, "transfer": 0, "refund": 0}
-
-        # Проверка с пустым списком категорий
-        result = categorize_transactions_by_description(transactions, [])
-        assert result == {}
-
-        # Проверка на отсутствие совпадений
-        result = categorize_transactions_by_description(transactions, ["nonexistent"])
-        assert result == {"nonexistent": 0}

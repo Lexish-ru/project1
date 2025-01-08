@@ -4,7 +4,6 @@ from src.processing import (
     filter_by_state,
     sort_by_date,
     search_transactions_by_regex,
-    count_transactions_by_category,
 )
 from src.widget import get_date, mask_card_account
 
@@ -32,21 +31,25 @@ def main():
             elif choice == "2":
                 transactions = pd.read_csv(file_path, sep=";", keep_default_na=False).to_dict(orient="records")
             elif choice == "3":
-                transactions = pd.read_excel(file_path, engine="openpyxl", keep_default_na=False).to_dict(orient="records")
+                transactions = pd.read_excel(file_path, engine="openpyxl", keep_default_na=False).to_dict(
+                    orient="records"
+                )
         except Exception as e:
             print(f"Ошибка при чтении файла: {e}")
             continue
 
         while True:
-            print("\nВведите статус, по которому необходимо выполнить фильтрацию.\nДоступные статусы: EXECUTED, CANCELED, PENDING")
+            print(
+                "\nВведите статус, по которому необходимо выполнить фильтрацию.\nДоступные статусы: EXECUTED, CANCELED, PENDING"
+            )
             status = input("Статус: ").strip().upper()
 
             if status not in ["EXECUTED", "CANCELED", "PENDING"]:
-                print(f"Статус операции \"{status}\" недоступен. Попробуйте снова.")
+                print(f'Статус операции "{status}" недоступен. Попробуйте снова.')
                 continue
 
             transactions = filter_by_state(transactions, status)
-            print(f"Операции отфильтрованы по статусу \"{status}\".")
+            print(f'Операции отфильтрованы по статусу "{status}".')
             break
 
         if not transactions:
@@ -64,16 +67,25 @@ def main():
         if input().strip().lower() == "да":
             ruble_aliases = {"RUB", "руб.", "ruble"}
             transactions = [
-                t for t in transactions
+                t
+                for t in transactions
                 if (
-                        t.get("operationAmount", {}).get("currency", {}).get("code", "").lower() in map(str.lower,
-                                                                                                        ruble_aliases)
-                        or t.get("operationAmount", {}).get("currency", {}).get("name", "").lower() in map(str.lower,
-                                                                                                           ruble_aliases)
-                        or t.get("currency_code", "").upper() in ruble_aliases
-                        or t.get("currency_name", "").lower() in map(str.lower, ruble_aliases)
+                    t.get("operationAmount", {}).get("currency", {}).get("code", "").lower()
+                    in map(str.lower, ruble_aliases)
+                    or t.get("operationAmount", {}).get("currency", {}).get("name", "").lower()
+                    in map(str.lower, ruble_aliases)
+                    or t.get("currency_code", "").upper() in ruble_aliases
+                    or t.get("currency_name", "").lower() in map(str.lower, ruble_aliases)
                 )
             ]
+
+        print("\nОтфильтровать список транзакций по определенному слову в описании? Да/Нет")
+        if input().strip().lower() == "да":
+            search_term = input("Введите текст для фильтрации по описанию: ").strip()
+            transactions = search_transactions_by_regex(transactions, search_term)
+            if not transactions:
+                print("Нет транзакций, соответствующих описанию.")
+                continue
 
         print("\nРаспечатываю итоговый список транзакций:")
         for t in transactions:
@@ -90,23 +102,25 @@ def main():
                 else t.get("currency_code", "Неизвестно")
             )
 
-            from_account = t.get("from", "Неизвестно").strip()
+            from_account = t.get("from", "").strip()
             to_account = t.get("to", "Неизвестно").strip()
-
-            # Маскируем данные через функцию mask_card_account
-            try:
-                masked_from_account = mask_card_account(from_account)
-            except ValueError:
-                masked_from_account = "Некорректные данные"
 
             try:
                 masked_to_account = mask_card_account(to_account)
             except ValueError:
                 masked_to_account = "Некорректные данные"
 
-            # Вывод транзакции
-            print(f"{date} {description}")
-            print(f"{masked_from_account} -> {masked_to_account}")
+            if from_account:
+                try:
+                    masked_from_account = mask_card_account(from_account)
+                except ValueError:
+                    masked_from_account = "Некорректные данные"
+                print(f"{date} {description}")
+                print(f"{masked_from_account} -> {masked_to_account}")
+            else:
+                print(f"{date} {description}")
+                print(f"{masked_to_account}")
+
             print(f"Сумма: {amount} {currency}\n")
 
 

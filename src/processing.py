@@ -7,17 +7,21 @@ from src.logger import setup_logger
 # Настраиваем логгер
 logger = setup_logger(name="processing", log_file="logs/processing.log")
 
+
 def filter_by_state(transactions: list[dict], state: str = "EXECUTED") -> list[dict]:
     """Функция фильтрации транзакций по признаку 'STATE'"""
     valid_states = ["CANCELED", "EXECUTED", "PENDING"]
     state = state.upper()  # Приведение статуса к верхнему регистру
     if state not in valid_states:
         return []
-    filtered_transactions = [transaction for transaction in transactions if transaction.get("state", "").upper() == state]
+    filtered_transactions = [
+        transaction for transaction in transactions if transaction.get("state", "").upper() == state
+    ]
     return filtered_transactions
 
 
 import warnings
+
 
 def sort_by_date(transactions: list, reverse: bool = False) -> list:
     valid_transactions = []
@@ -31,8 +35,6 @@ def sort_by_date(transactions: list, reverse: bool = False) -> list:
         except Exception as e:
             warnings.warn(f"Некорректная дата в транзакции: {transaction}", UserWarning)
     return sorted(valid_transactions, key=lambda x: x["date"], reverse=reverse)
-
-
 
 
 def search_transactions_by_regex(transactions: List[Dict], search_term: str) -> List[Dict]:
@@ -95,14 +97,15 @@ def read_transactions_from_excel(file_path: str) -> List[Dict[str, str]]:
         raise ValueError(f"Ошибка при чтении Excel-файла: {e}")
 
 
-def categorize_transactions_by_description(transactions: List[Dict[str, str]], categories: List[str]) -> Dict[str, int]:
+def categorize_transactions_by_description(
+    transactions: List[Dict[str, str]], categories: List[str]
+) -> Dict[str, int]:
     """
     Подсчет категорий транзакций на основе описания."""
     category_counts = {category: 0 for category in categories}
     for transaction in transactions:
-        description = transaction.get('description', '').lower()
+        description = transaction.get("description", "").lower()
         for category in categories:
             if category.lower() in description:
                 category_counts[category] += 1
     return category_counts
-

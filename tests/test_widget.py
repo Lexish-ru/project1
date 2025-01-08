@@ -17,4 +17,3 @@ def test_get_date():
     """Тест функции конвертации даты"""
     assert get_date("2024-12-23") == "23.12.2024"
     assert get_date("Invalid date") == "Неизвестно"
-

@@ -12,7 +12,7 @@ def test_get_or_create_api_key_missing_key(mock_load_dotenv, mock_getenv, mock_o
     """Проверка: если ключ отсутствует, он запрашивается у пользователя и сохраняется."""
     api_key = get_or_create_api_key()
     assert api_key == "test_api_key"
-    mock_open_file.assert_called_with(os.path.join(os.getcwd(), ".env"), "a", encoding="utf-8")
+    mock_open_file.assert_called_with(os.path.join(os.getcwd(), "../.env"), "a", encoding="utf-8")
     mock_open_file().write.assert_called_with("API_KEY=test_api_key\n")
 
 
@@ -24,7 +24,7 @@ def test_get_or_create_api_key_invalid_input(mock_load_dotenv, mock_getenv, mock
     """Проверка обработки пустого ввода API-ключа."""
     api_key = get_or_create_api_key()
     assert api_key == "valid_api_key"
-    mock_open_file.assert_called_with(os.path.join(os.getcwd(), ".env"), "a", encoding="utf-8")
+    mock_open_file.assert_called_with(os.path.join(os.getcwd(), "../.env"), "a", encoding="utf-8")
     mock_open_file().write.assert_called_with("API_KEY=valid_api_key\n")
 
 

@@ -7,10 +7,15 @@ from src.processing import (
 )
 from src.widget import get_date, mask_card_account
 
-
-def main():
+def main(test_mode=False, max_iterations=None):
     print("Привет! Добро пожаловать в программу работы с банковскими транзакциями.")
+    iteration_count = 0
+
     while True:
+        if test_mode and max_iterations is not None and iteration_count >= max_iterations:
+            print("Тестовый режим завершён.")
+            break
+
         print("\nВыберите необходимый пункт меню:")
         print("1. Получить информацию о транзакциях из JSON-файла")
         print("2. Получить информацию о транзакциях из CSV-файла")
@@ -20,6 +25,7 @@ def main():
 
         if choice not in ["1", "2", "3"]:
             print("Некорректный выбор. Попробуйте снова.")
+            iteration_count += 1
             continue
 
         file_path = input("Введите путь к файлу с транзакциями: ").strip()
@@ -36,6 +42,7 @@ def main():
                 )
         except Exception as e:
             print(f"Ошибка при чтении файла: {e}")
+            iteration_count += 1
             continue
 
         while True:
@@ -54,13 +61,14 @@ def main():
 
         if not transactions:
             print("Не найдено ни одной транзакции, подходящей под условия фильтрации.")
+            iteration_count += 1
             continue
 
         print("\nОтсортировать операции по дате? Да/Нет")
         if input().strip().lower() == "да":
             print("Отсортировать по возрастанию или по убыванию? (введите: по возрастанию/по убыванию)")
             order = input().strip().lower()
-            reverse = order == "по убыванию"
+            reverse = (order == "по убыванию")
             transactions = sort_by_date(transactions, reverse=reverse)
 
         print("\nВыводить только рублевые транзакции? Да/Нет")
@@ -85,6 +93,7 @@ def main():
             transactions = search_transactions_by_regex(transactions, search_term)
             if not transactions:
                 print("Нет транзакций, соответствующих описанию.")
+                iteration_count += 1
                 continue
 
         print("\nРаспечатываю итоговый список транзакций:")
@@ -123,6 +132,7 @@ def main():
 
             print(f"Сумма: {amount} {currency}\n")
 
+        iteration_count += 1
 
 if __name__ == "__main__":
     main()

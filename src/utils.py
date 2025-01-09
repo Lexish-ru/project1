@@ -15,7 +15,7 @@ def get_or_create_api_key() -> str:
                 print("API-ключ не может быть пустым. Попробуйте снова.")
 
         # Save the API key to the .env file
-        env_path = os.path.join(os.getcwd(), ".env")
+        env_path = os.path.join(os.getcwd(), "../.env")
         with open(env_path, "a", encoding="utf-8") as env_file:
             env_file.write(f"API_KEY={api_key}\n")
 

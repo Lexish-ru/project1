@@ -1,7 +1,9 @@
-from src.masks import mask_bank_account, mask_card_number
-import pandas as pd
 import re
+
+import pandas as pd
+
 from src.logger import setup_logger
+from src.masks import mask_bank_account, mask_card_number
 
 # Настраиваем логгер
 logger = setup_logger(name="widget", log_file="logs/widget.log")

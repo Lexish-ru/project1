@@ -6,12 +6,12 @@ import pandas as pd
 import pytest
 
 from src.processing import (
+    categorize_transactions_by_description,
     filter_by_state,
     read_transactions_from_csv,
     read_transactions_from_excel,
-    sort_by_date,
-    categorize_transactions_by_description,
     search_transactions_by_regex,
+    sort_by_date,
 )
 
 
@@ -76,11 +76,17 @@ def test_filter_by_state(transactions_fixture: List[dict], state: str, expected:
     ],
 )
 def test_sort_by_date(transactions_fixture, reverse, expected):
+    """
+    Тест сортировки по дате
+    """
     result = sort_by_date(transactions_fixture, reverse)
     assert result == expected
 
 
 def test_sort_by_date_invalid_data():
+    """
+    Тест сортировки по дате при неправильных входных данных
+    """
     transactions = [{"invalid": "data"}]  # Транзакция без ключа "date"
     with pytest.warns(UserWarning, match="Некорректная дата в транзакции"):
         result = sort_by_date(transactions, reverse=True)
@@ -217,7 +223,11 @@ def test_read_transactions_from_csv_mock(mock_read_csv):
 
 @patch("pandas.read_excel")
 def test_read_transactions_from_excel_mock(mock_read_excel):
-    """Тест функции чтения данных из Excel с использованием Mock."""
+    """
+    Тестирует функцию чтения данных из Excel-файла с использованием Mock.
+
+    Проверяется, что данные правильно читаются из Excel с заранее заданными значениями.
+    """
     mock_data = pd.DataFrame(
         [
             {
@@ -261,6 +271,11 @@ def test_read_transactions_from_excel_mock(mock_read_excel):
 
 # Тестовая функция для проверки корректности работы
 if __name__ == "__main__":
+    """
+    Выполняет чтение данных из Excel-файла и выводит первые две записи.
+
+    Используется для ручной проверки работы функции чтения данных.
+    """
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
     test_file = os.path.join(base_dir, "transactions_excel.xlsx")
     result = read_transactions_from_excel(test_file)
@@ -279,6 +294,11 @@ if __name__ == "__main__":
     ],
 )
 def test_categorize_transactions_by_description(transactions, categories, expected):
+    """
+    Тестирует функцию категоризации транзакций по описанию.
+
+    Проверяется, что описания транзакций корректно соответствуют заданным категориям.
+    """
     assert categorize_transactions_by_description(transactions, categories) == expected
 
 
@@ -294,4 +314,9 @@ def test_categorize_transactions_by_description(transactions, categories, expect
     ],
 )
 def test_search_transactions_by_regex(transactions, search_term, expected):
+    """
+    Тестирует функцию поиска транзакций с использованием регулярных выражений.
+
+    Проверяется, что транзакции корректно фильтруются по заданному шаблону.
+    """
     assert search_transactions_by_regex(transactions, search_term) == expected

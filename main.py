@@ -1,13 +1,13 @@
 import json
+
 import pandas as pd
-from src.processing import (
-    filter_by_state,
-    sort_by_date,
-    search_transactions_by_regex,
-)
+
+from src.processing import filter_by_state, search_transactions_by_regex, sort_by_date
 from src.widget import get_date, mask_card_account
 
+
 def main(test_mode=False, max_iterations=None):
+    """Основная логика ПО"""
     print("Привет! Добро пожаловать в программу работы с банковскими транзакциями.")
     iteration_count = 0
 
@@ -68,7 +68,7 @@ def main(test_mode=False, max_iterations=None):
         if input().strip().lower() == "да":
             print("Отсортировать по возрастанию или по убыванию? (введите: по возрастанию/по убыванию)")
             order = input().strip().lower()
-            reverse = (order == "по убыванию")
+            reverse = order == "по убыванию"
             transactions = sort_by_date(transactions, reverse=reverse)
 
         print("\nВыводить только рублевые транзакции? Да/Нет")
@@ -133,6 +133,7 @@ def main(test_mode=False, max_iterations=None):
             print(f"Сумма: {amount} {currency}\n")
 
         iteration_count += 1
+
 
 if __name__ == "__main__":
     main()

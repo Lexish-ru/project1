@@ -1,7 +1,9 @@
 import re
-from typing import List, Dict, Any
 from collections import Counter
+from typing import Any, Dict, List
+
 import pandas as pd
+
 from src.logger import setup_logger
 
 # Настраиваем логгер
@@ -24,6 +26,9 @@ import warnings
 
 
 def sort_by_date(transactions: list, reverse: bool = False) -> list:
+    """
+    Функция сортировки по дате
+    """
     valid_transactions = []
     for transaction in transactions:
         try:
@@ -48,10 +53,6 @@ def search_transactions_by_regex(transactions: List[Dict], search_term: str) -> 
 def count_transactions_by_category(transactions: List[Dict], categories: List[str]) -> Dict[str, int]:
     """
     Считает количество операций для каждой категории из списка категорий.
-
-    :param transactions: Список транзакций (словарей).
-    :param categories: Список категорий.
-    :return: Словарь с количеством операций по каждой категории.
     """
     category_counts = Counter()
 
@@ -65,21 +66,16 @@ def count_transactions_by_category(transactions: List[Dict], categories: List[st
 
 
 def read_transactions_from_csv(file_path: str) -> List[Dict[str, str]]:
-    """Считывает транзакции из CSV-файла.
-
-    :param file_path: Путь к файлу CSV.
-    :return: Список транзакций в виде словарей.
+    """
+    Считывает транзакции из CSV-файла.
     """
     try:
         data = pd.read_csv(file_path, sep=";", keep_default_na=False)
 
-        # Заменяем пустые строки на 0 в колонке amount
         data["amount"] = data["amount"].replace("", "0").astype(float)
 
-        # Преобразуем дату в формат datetime
         data["date"] = pd.to_datetime(data["date"], errors="coerce")
 
-        # Удаляем строки с некорректными датами
         data = data.dropna(subset=["date"])
 
         return data.to_dict(orient="records")
@@ -101,7 +97,8 @@ def categorize_transactions_by_description(
     transactions: List[Dict[str, str]], categories: List[str]
 ) -> Dict[str, int]:
     """
-    Подсчет категорий транзакций на основе описания."""
+    Подсчет категорий транзакций на основе описания.
+    """
     category_counts = {category: 0 for category in categories}
     for transaction in transactions:
         description = transaction.get("description", "").lower()

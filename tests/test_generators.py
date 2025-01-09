@@ -29,11 +29,23 @@ def test_transaction_descriptions(generators_transactions_fixture: List[Dict]) -
     assert empty_descriptions == []
 
 
-@pytest.mark.parametrize("start, end, expected", [
-    (1, 5, ["0000 0000 0000 0001", "0000 0000 0000 0002", "0000 0000 0000 0003",
-            "0000 0000 0000 0004", "0000 0000 0000 0005"]),
-    (100, 102, ["0000 0000 0000 0100", "0000 0000 0000 0101", "0000 0000 0000 0102"])
-])
+@pytest.mark.parametrize(
+    "start, end, expected",
+    [
+        (
+            1,
+            5,
+            [
+                "0000 0000 0000 0001",
+                "0000 0000 0000 0002",
+                "0000 0000 0000 0003",
+                "0000 0000 0000 0004",
+                "0000 0000 0000 0005",
+            ],
+        ),
+        (100, 102, ["0000 0000 0000 0100", "0000 0000 0000 0101", "0000 0000 0000 0102"]),
+    ],
+)
 def test_card_number_generator(start: int, end: int, expected: List[str]) -> None:
     """Тестирование функции card_number_generator"""
     generated_numbers = list(card_number_generator(start, end))

@@ -15,11 +15,7 @@ def convert_to_rub(amount: Union[int, float], currency_code: str) -> float:
     if currency_code == "RUB":
         return float(amount)
 
-    params = {
-        "from": currency_code,
-        "to": "RUB",
-        "amount": amount
-    }
+    params = {"from": currency_code, "to": "RUB", "amount": amount}
     headers = {"apikey": API_KEY}
 
     try:

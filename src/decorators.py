@@ -8,6 +8,7 @@ def log(filename: Optional[str] = None) -> Callable[[Callable[..., Any]], Callab
     """
     Декоратор для логирования выполнения функции.
     """
+
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -18,11 +19,12 @@ def log(filename: Optional[str] = None) -> Callable[[Callable[..., Any]], Callab
                 logger.handlers.clear()
 
             if filename:
-                base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../src"))
-                os.makedirs(base_dir, exist_ok=True)
-                abs_path = os.path.join(base_dir, filename)
+                # Используем корень проекта для сохранения логов
+                project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+                os.makedirs(project_root, exist_ok=True)
+                abs_path = os.path.join(project_root, filename)
 
-                file_handler = logging.FileHandler(abs_path, mode='a')
+                file_handler = logging.FileHandler(abs_path, mode="a")
                 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
                 file_handler.setFormatter(formatter)
                 logger.addHandler(file_handler)
@@ -40,6 +42,7 @@ def log(filename: Optional[str] = None) -> Callable[[Callable[..., Any]], Callab
                 raise
 
         return wrapper
+
     return decorator
 
 

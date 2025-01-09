@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 
 import pandas as pd
 
@@ -6,7 +7,7 @@ from src.processing import filter_by_state, search_transactions_by_regex, sort_b
 from src.widget import get_date, mask_card_account
 
 
-def main(test_mode=False, max_iterations=None):
+def main(test_mode: bool = False, max_iterations: Optional[int] = None) -> None:
     """Основная логика ПО"""
     print("Привет! Добро пожаловать в программу работы с банковскими транзакциями.")
     iteration_count = 0
@@ -47,7 +48,8 @@ def main(test_mode=False, max_iterations=None):
 
         while True:
             print(
-                "\nВведите статус, по которому необходимо выполнить фильтрацию.\nДоступные статусы: EXECUTED, CANCELED, PENDING"
+                "\nВведите статус, по которому необходимо выполнить фильтрацию."
+                "\nДоступные статусы: EXECUTED, CANCELED, PENDING"
             )
             status = input("Статус: ").strip().upper()
 

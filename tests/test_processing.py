@@ -5,14 +5,8 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
-from src.processing import (
-    categorize_transactions_by_description,
-    filter_by_state,
-    read_transactions_from_csv,
-    read_transactions_from_excel,
-    search_transactions_by_regex,
-    sort_by_date,
-)
+from src.processing import (categorize_transactions_by_description, filter_by_state, read_transactions_from_csv,
+                            read_transactions_from_excel, search_transactions_by_regex, sort_by_date)
 
 
 @pytest.mark.parametrize(

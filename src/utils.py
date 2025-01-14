@@ -1,33 +1,21 @@
 import json
 import os
-from typing import Callable, Optional
+from functools import wraps
+from typing import Any, Callable, Optional
 
 
-def save_to_file(filename: Optional[str] = None) -> Callable:
-    def decorator(func: Callable) -> Callable:
-        def wrapper(*args, **kwargs):
+def save_to_file(filename: Optional[str] = None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             result = func(*args, **kwargs)
-
-            # Определяем путь до папки 'output', начиная с корня проекта
-            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
-            output_dir = os.path.join(project_root, "output")
+            output_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../output")
             os.makedirs(output_dir, exist_ok=True)
-
-            # Генерируем имя файла для сохранения
-            output_file = os.path.join(output_dir, filename or f"{func.__name__}_output.json")
-
-            # Отладочный вывод
-            print(f"Текущая рабочая директория: {os.getcwd()}")
-            print(f"Сохраняем файл в: {output_file}")
-
-            # Сохраняем результат в файл
-            try:
-                with open(output_file, "w", encoding="utf-8") as file:
-                    json.dump(result, file, indent=4, ensure_ascii=False)
-                print(f"Результат функции '{func.__name__}' сохранен в файл: {output_file}")
-            except Exception as e:
-                print(f"Ошибка при сохранении файла {output_file}: {e}")
-
+            output_file = filename or f"{func.__name__}_output.json"
+            output_path = os.path.join(output_dir, output_file)
+            with open(output_path, "w", encoding="utf-8") as file:
+                json.dump(result, file, indent=4, ensure_ascii=False)
+            print(f"Результат функции '{func.__name__}' сохранен в файл: {output_path}")
             return result
 
         return wrapper

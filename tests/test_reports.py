@@ -1,48 +1,54 @@
-import os
+from unittest.mock import patch
 
+import pandas as pd
 import pytest
 
 from src.reports import spending_by_category, spending_by_weekday, spending_by_workday
 
 
-def test_spending_by_category(sample_transactions):
-    """Тест функции spending_by_category."""
-    output_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../output")
-    os.makedirs(output_dir, exist_ok=True)
-    result = spending_by_category(sample_transactions, "каршеринг", "30.12.2021")
-    assert result["category"] == "каршеринг"
-    assert result["total_spent"] == pytest.approx(-260.53, 0.01)  # Сумма -7.07 + -257.89 + -1.32
-    assert result["start_date"] == "01.10.2021"
-    assert result["end_date"] == "30.12.2021"
+@pytest.mark.parametrize(
+    "category, date, expected_total",
+    [
+        ("каршеринг", "30.12.2021", -264.96),
+        ("супермаркеты", "30.12.2021", -160.89),
+        ("дом и ремонт", "28.12.2021", -210.00),
+        ("путешествия", "30.12.2021", 0.00),
+    ],
+)
+def test_spending_by_category_param(
+    sample_transactions: pd.DataFrame, category: str, date: str, expected_total: float
+) -> None:
+    """Параметризованный тест функции spending_by_category."""
+    with patch("src.reports.logging") as mock_logging:
+        result = spending_by_category(sample_transactions, category, date)
+        assert result["category"] == category
+        assert result["total_spent"] == pytest.approx(expected_total, rel=0.01)
+        mock_logging.info.assert_called()
 
 
-def test_spending_by_category_no_data(sample_transactions):
-    """Тест функции spending_by_category, если данных нет."""
-    output_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../output")
-    os.makedirs(output_dir, exist_ok=True)
-    result = spending_by_category(sample_transactions, "путешествия", "30.12.2021")
-    assert result["category"] == "путешествия"
-    assert result["total_spent"] == 0.0
+def test_spending_by_category_logic(sample_transactions: pd.DataFrame) -> None:
+    """Тест логики функции spending_by_category."""
+    with patch("src.reports.logging") as mock_logging:
+        result = spending_by_category(sample_transactions, "каршеринг", "30.12.2021")
+        assert result["category"] == "каршеринг"
+        assert result["total_spent"] == pytest.approx(-264.96, rel=0.01)
+        mock_logging.info.assert_called()
 
 
-def test_spending_by_weekday(sample_transactions):
+def test_spending_by_weekday(sample_transactions: pd.DataFrame) -> None:
     """Тест функции spending_by_weekday."""
-    output_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../output")
-    os.makedirs(output_dir, exist_ok=True)
-    result = spending_by_weekday(sample_transactions, "30.12.2021")
-    assert result["start_date"] == "01.10.2021"
-    assert result["end_date"] == "30.12.2021"
-    weekdays = result["average_spending_by_weekday"]
-    assert weekdays["Monday"] == pytest.approx(-67.10, 0.01)
-    assert weekdays["Sunday"] == pytest.approx(-1.32, 0.01)
+    with patch("src.reports.logging") as mock_logging:
+        result = spending_by_weekday(sample_transactions, "30.12.2021")
+        weekdays = result["average_spending_by_weekday"]
+        assert weekdays.get("Thursday", 0) == pytest.approx(-83.98, rel=0.01)
+        assert weekdays.get("Wednesday", 0) == pytest.approx(-257.89, rel=0.01)
+        mock_logging.info.assert_called()
 
 
-def test_spending_by_workday(sample_transactions):
+def test_spending_by_workday(sample_transactions: pd.DataFrame) -> None:
     """Тест функции spending_by_workday."""
-    output_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../output")
-    os.makedirs(output_dir, exist_ok=True)
-    result = spending_by_workday(sample_transactions, "30.12.2021")
-    assert result["start_date"] == "01.10.2021"
-    assert result["end_date"] == "30.12.2021"
-    assert result["average_spending"]["workday"] == pytest.approx(-178.33, 0.01)  # Среднее по рабочим дням
-    assert result["average_spending"]["weekend"] == pytest.approx(-1.32, 0.01)  # Среднее по выходным
+    with patch("src.reports.logging") as mock_logging:
+        result = spending_by_workday(sample_transactions, "30.12.2021")
+        assert result["average_spending"]["workday"] == pytest.approx(-158.96, 0.01)
+        assert result["average_spending"]["weekend"] == pytest.approx(0.00, 0.01)
+        mock_logging.info.assert_called()

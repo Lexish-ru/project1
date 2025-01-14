@@ -37,7 +37,7 @@ def load_transactions(file_path: str) -> pd.DataFrame:
     return transactions
 
 
-def main():
+def main() -> None:
     """
     Основная функция программы.
     """

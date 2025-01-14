@@ -1,11 +1,14 @@
 import json
 import os
+
 from src.utils import save_to_file
+
 
 @save_to_file("test_output.json")
 def sample_function():
     """Пример функции для тестирования декоратора."""
     return {"key": "value"}
+
 
 def test_save_to_file():
     """Тест декоратора 'save_to_file'."""

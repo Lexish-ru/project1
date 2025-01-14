@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 
 def save_to_file(filename: Optional[str] = None) -> Callable:

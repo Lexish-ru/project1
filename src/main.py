@@ -1,7 +1,8 @@
 import os
+
 import pandas as pd
+
 from src.reports import spending_by_category, spending_by_weekday, spending_by_workday
-from src.utils import save_to_file
 
 
 def load_transactions(file_path: str) -> pd.DataFrame:
@@ -17,21 +18,19 @@ def load_transactions(file_path: str) -> pd.DataFrame:
     transactions = pd.read_excel(full_path)
 
     # Переименовываем и форматируем данные
-    transactions = transactions.rename(columns={
-        'Дата операции': 'date',
-        'Категория': 'category',
-        'Сумма операции': 'amount'
-    })
+    transactions = transactions.rename(
+        columns={"Дата операции": "date", "Категория": "category", "Сумма операции": "amount"}
+    )
 
     # Пробуем преобразовать даты в формате 'ДД.ММ.ГГГГ ЧЧ:ММ:СС' или 'ДД.ММ.ГГГГ'
     try:
-        transactions['date'] = pd.to_datetime(transactions['date'], format='%d.%m.%Y %H:%M:%S', errors='coerce')
+        transactions["date"] = pd.to_datetime(transactions["date"], format="%d.%m.%Y %H:%M:%S", errors="coerce")
     except ValueError:
-        transactions['date'] = pd.to_datetime(transactions['date'], format='%d.%m.%Y', errors='coerce')
+        transactions["date"] = pd.to_datetime(transactions["date"], format="%d.%m.%Y", errors="coerce")
 
     # Проверяем наличие некорректных значений
-    if transactions['date'].isnull().any():
-        invalid_dates = transactions[transactions['date'].isnull()]
+    if transactions["date"].isnull().any():
+        invalid_dates = transactions[transactions["date"].isnull()]
         print("Некорректные строки с датами:", invalid_dates)
         raise ValueError("Некорректные значения в столбце 'date'. Проверьте формат файла.")
 

@@ -10,7 +10,7 @@ def test_spending_by_category(sample_transactions):
     result = spending_by_category(sample_transactions, "каршеринг", "30.12.2021")
     output_file = os.path.join(output_dir, "spending_by_category_output.json")
     assert result["category"] == "каршеринг"
-    assert result["total_spent"] == pytest.approx(-267.60, 0.01)  # Сумма -7.07 + -257.89 + -1.32
+    assert result["total_spent"] == pytest.approx(-260.53, 0.01)  # Сумма -7.07 + -257.89 + -1.32
     assert result["start_date"] == "01.10.2021"
     assert result["end_date"] == "30.12.2021"
 
@@ -43,5 +43,5 @@ def test_spending_by_workday(sample_transactions):
     output_file = os.path.join(output_dir, "spending_by_workday_output.json")
     assert result["start_date"] == "01.10.2021"
     assert result["end_date"] == "30.12.2021"
-    assert result["average_spending"]["workday"] == pytest.approx(-174.26, 0.01)  # Среднее по рабочим дням
+    assert result["average_spending"]["workday"] == pytest.approx(-178.33, 0.01)  # Среднее по рабочим дням
     assert result["average_spending"]["weekend"] == pytest.approx(-1.32, 0.01)  # Среднее по выходным

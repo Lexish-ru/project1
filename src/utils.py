@@ -16,11 +16,18 @@ def save_to_file(filename: Optional[str] = None) -> Callable:
             # Генерируем имя файла для сохранения
             output_file = os.path.join(output_dir, filename or f"{func.__name__}_output.json")
 
-            # Сохраняем результат в файл
-            with open(output_file, "w", encoding="utf-8") as file:
-                json.dump(result, file, indent=4, ensure_ascii=False)
+            # Отладочный вывод
+            print(f"Текущая рабочая директория: {os.getcwd()}")
+            print(f"Сохраняем файл в: {output_file}")
 
-            print(f"Результат функции '{func.__name__}' сохранен в файл: {output_file}")
+            # Сохраняем результат в файл
+            try:
+                with open(output_file, "w", encoding="utf-8") as file:
+                    json.dump(result, file, indent=4, ensure_ascii=False)
+                print(f"Результат функции '{func.__name__}' сохранен в файл: {output_file}")
+            except Exception as e:
+                print(f"Ошибка при сохранении файла {output_file}: {e}")
+
             return result
 
         return wrapper

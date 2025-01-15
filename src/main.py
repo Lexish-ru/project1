@@ -1,7 +1,9 @@
 import os
+
 import pandas as pd
+
 from src.reports import spending_by_category, spending_by_weekday, spending_by_workday
-from src.utils import save_to_file
+
 
 def load_transactions(file_path: str) -> pd.DataFrame:
     """
@@ -86,6 +88,7 @@ def main() -> None:
         except Exception as e:
             print(f"Ошибка: {e}")
             continue
+
 
 if __name__ == "__main__":
     main()

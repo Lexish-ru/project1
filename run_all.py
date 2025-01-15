@@ -1,7 +1,7 @@
 import os
-import pandas as pd
-from src.reports import spending_by_category, spending_by_weekday, spending_by_workday
+
 from src.main import load_transactions
+from src.reports import spending_by_category, spending_by_weekday, spending_by_workday
 
 
 def run_all():

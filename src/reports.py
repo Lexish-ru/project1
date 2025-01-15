@@ -1,8 +1,10 @@
 import logging
 from datetime import datetime, timedelta
 from typing import Optional
-from src.utils import save_to_file
+
 import pandas as pd
+
+from src.utils import save_to_file
 
 
 @save_to_file()
@@ -21,22 +23,27 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
     category = category.strip().lower()
 
     filtered_transactions = transactions[
-        (transactions["date"] >= start_date) &
-        (transactions["date"] <= current_date) &
-        (transactions["category"] == category)
+        (transactions["date"] >= start_date)
+        & (transactions["date"] <= current_date)
+        & (transactions["category"] == category)
     ]
 
     if filtered_transactions.empty:
         return "Нет трат по данной категории в выбранный период."
 
     total_spent = filtered_transactions["amount"].sum()
-    result = pd.DataFrame([{
-        "Категория": category,
-        "Общая сумма трат": total_spent,
-        "Начальная дата": start_date.strftime("%d.%m.%Y"),
-        "Конечная дата": current_date.strftime("%d.%m.%Y")
-    }])
+    result = pd.DataFrame(
+        [
+            {
+                "Категория": category,
+                "Общая сумма трат": total_spent,
+                "Начальная дата": start_date.strftime("%d.%m.%Y"),
+                "Конечная дата": current_date.strftime("%d.%m.%Y"),
+            }
+        ]
+    )
     return result
+
 
 @save_to_file()
 def spending_by_weekday(transactions: pd.DataFrame, date: Optional[str] = None) -> pd.DataFrame:

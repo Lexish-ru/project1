@@ -1,15 +1,41 @@
+import os
+
 import pandas as pd
 import pytest
 
 
 @pytest.fixture
-def sample_transactions() -> pd.DataFrame:
-    """Фикстура для создания тестового DataFrame с транзакциями."""
+def sample_transactions():
     data = {
-        "date": ["2021-12-30", "2021-12-30", "2021-12-29", "2021-12-28"],
-        "category": ["каршеринг", "супермаркеты", "каршеринг", "дом и ремонт"],
-        "amount": [-7.07, -160.89, -257.89, -210.00],
+        "date": pd.to_datetime(["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05"]),
+        "category": ["продукты", "транспорт", "транспорт", "продукты", "продукты"],
+        "amount": [100, 200, 300, 400, 500],
     }
-    df = pd.DataFrame(data)
-    df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
-    return df
+    return pd.DataFrame(data)
+
+
+@pytest.fixture
+def sample_transactions_file(tmp_path):
+    # Создаем временный файл для тестов
+    file = tmp_path / "transactions.xlsx"
+    file.write_text("test")  # Содержимое файла не имеет значения для моков
+    return file
+
+
+@pytest.fixture
+def sample_dataframe():
+    return pd.DataFrame({"column1": [1, 2, 3], "column2": ["a", "b", "c"]})
+
+
+@pytest.fixture
+def project_root():
+    # Корень проекта - на уровень выше папки tests
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
+
+
+@pytest.fixture
+def sample_output_dir(project_root):
+    # Папка output внутри корня проекта
+    output_dir = os.path.join(project_root, "output")
+    os.makedirs(output_dir, exist_ok=True)
+    return output_dir

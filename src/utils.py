@@ -1,5 +1,6 @@
 import json
 import os
+import pandas as pd
 from functools import wraps
 from typing import Any, Callable, Optional
 
@@ -13,11 +14,18 @@ def save_to_file(filename: Optional[str] = None) -> Callable[[Callable[..., Any]
             os.makedirs(output_dir, exist_ok=True)
             output_file = filename or f"{func.__name__}_output.json"
             output_path = os.path.join(output_dir, output_file)
-            with open(output_path, "w", encoding="utf-8") as file:
-                json.dump(result, file, indent=4, ensure_ascii=False)
+
+            # Сохраняем результат
+            if isinstance(result, pd.DataFrame):
+                result.to_json(output_path, orient="records", force_ascii=False, indent=4)
+            else:
+                with open(output_path, "w", encoding="utf-8") as file:
+                    json.dump(result, file, indent=4, ensure_ascii=False)
+
             print(f"Результат функции '{func.__name__}' сохранен в файл: {output_path}")
             return result
 
         return wrapper
 
     return decorator
+

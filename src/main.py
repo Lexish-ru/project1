@@ -1,9 +1,7 @@
 import os
-
 import pandas as pd
-
 from src.reports import spending_by_category, spending_by_weekday, spending_by_workday
-
+from src.utils import save_to_file
 
 def load_transactions(file_path: str) -> pd.DataFrame:
     """
@@ -22,17 +20,17 @@ def load_transactions(file_path: str) -> pd.DataFrame:
         columns={"Дата операции": "date", "Категория": "category", "Сумма операции": "amount"}
     )
 
-    # Пробуем преобразовать даты в формате 'ДД.ММ.ГГГГ ЧЧ:ММ:СС' или 'ДД.ММ.ГГГГ'
-    try:
-        transactions["date"] = pd.to_datetime(transactions["date"], format="%d.%m.%Y %H:%M:%S", errors="coerce")
-    except ValueError:
-        transactions["date"] = pd.to_datetime(transactions["date"], format="%d.%m.%Y", errors="coerce")
+    # Преобразование даты
+    transactions["date"] = pd.to_datetime(transactions["date"], format="%d.%m.%Y %H:%M:%S", errors="coerce")
 
-    # Проверяем наличие некорректных значений
+    # Удаление пробелов и приведение категорий к нижнему регистру
+    transactions["category"] = transactions["category"].str.strip().str.lower()
+
+    # Проверка на некорректные даты
     if transactions["date"].isnull().any():
         invalid_dates = transactions[transactions["date"].isnull()]
         print("Некорректные строки с датами:", invalid_dates)
-        raise ValueError("Некорректные значения в столбце 'date'. Проверьте формат файла.")
+        raise ValueError("Некорректные значения в столбце 'date'. Проверьте данные.")
 
     return transactions
 
@@ -62,17 +60,25 @@ def main() -> None:
                 category = input("Введите категорию: ")
                 date = input("Введите дату (формат ДД.ММ.ГГГГ, оставьте пустым для текущей даты): ") or None
                 result = spending_by_category(transactions, category, date)
-                print("Результат анализа:", result)
+                print("Результат анализа (траты по категории):")
+                if isinstance(result, str):
+                    print(result)
+                else:
+                    print(result)
 
             elif choice == "2":
                 date = input("Введите дату (формат ДД.ММ.ГГГГ, оставьте пустым для текущей даты): ") or None
                 result = spending_by_weekday(transactions, date)
-                print("Результат анализа:", result)
+                print("Результат анализа (средние траты по дням недели):")
+                result.columns = ["День недели", "Средние траты"]
+                print(result)
 
             elif choice == "3":
                 date = input("Введите дату (формат ДД.ММ.ГГГГ, оставьте пустым для текущей даты): ") or None
                 result = spending_by_workday(transactions, date)
-                print("Результат анализа:", result)
+                print("Результат анализа (средние траты в рабочие/выходные дни):")
+                result.columns = ["Рабочий день", "Средние траты"]
+                print(result)
 
             else:
                 print("Неверный выбор. Попробуйте снова.")
@@ -80,7 +86,6 @@ def main() -> None:
         except Exception as e:
             print(f"Ошибка: {e}")
             continue
-
 
 if __name__ == "__main__":
     main()

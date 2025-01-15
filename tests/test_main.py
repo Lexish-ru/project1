@@ -7,6 +7,9 @@ from src.main import load_transactions, main
 
 @patch("src.main.pd.read_excel")
 def test_load_transactions(mock_read_excel, sample_transactions_file):
+    """
+    Тест загрузки и обработки excel файла
+    """
     # Mocking read_excel
     mock_data = pd.DataFrame(
         {"Дата операции": ["01.01.2021 12:00:00"], "Категория": ["Продукты"], "Сумма операции": [100.50]}
@@ -28,6 +31,9 @@ def test_load_transactions(mock_read_excel, sample_transactions_file):
 @patch("builtins.input", side_effect=["1", "data/operations.xlsx", "каршеринг", "30.12.2020", "0"])
 @patch("builtins.print")
 def test_main_function(mock_print, mock_input):
+    """
+    Тест основной логики программы
+    """
     main()
 
     # Проверяем, что программа вызвала input и print

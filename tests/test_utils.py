@@ -8,6 +8,9 @@ from src.utils import save_to_file
 @patch("os.makedirs")
 @patch("builtins.open", new_callable=mock_open)
 def test_save_to_file_json(mock_open_instance, mock_makedirs, sample_dataframe, sample_output_dir):
+    """
+    Тест работы декоратора по записи JSON файла
+    """
     # Относительный путь, передаваемый в декоратор
     relative_output_path = "output/test_output.json"
 

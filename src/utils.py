@@ -7,6 +7,10 @@ import pandas as pd
 
 
 def save_to_file(filename: Optional[str] = None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    """
+    Экспортирует результаты обработки транзакций в JSON файл
+    """
+
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:

@@ -1,52 +1,43 @@
-import os
-import unittest
 from unittest.mock import patch
 
-from main import main
+import pandas as pd
 
-os.chdir("/home/alexey/PycharmProjects/project1/")
+from src.main import load_transactions, main
 
 
-class TestMainLogic(unittest.TestCase):
-
-    @patch(
-        "builtins.input",
-        side_effect=["1", "data/operations.json", "EXECUTED", "да", "по убыванию", "нет", "да", "открытие"],
+@patch("src.main.pd.read_excel")
+def test_load_transactions(mock_read_excel, sample_transactions_file):
+    """
+    Тест загрузки и обработки excel файла
+    """
+    # Mocking read_excel
+    mock_data = pd.DataFrame(
+        {"Дата операции": ["01.01.2021 12:00:00"], "Категория": ["Продукты"], "Сумма операции": [100.50]}
     )
-    @patch("builtins.print")
-    def test_main_json(self, mock_print, mock_input):
-        """Тест логики при обработке JSON файла и правильных вводных данных"""
-        main(test_mode=True, max_iterations=1)
-        mock_print.assert_any_call("Привет! Добро пожаловать в программу работы с банковскими транзакциями.")
-        mock_print.assert_any_call('Операции отфильтрованы по статусу "EXECUTED".')
+    mock_read_excel.return_value = mock_data
 
-    @patch(
-        "builtins.input", side_effect=["1", "data/operations.json", "EXECUTED", "да", "по возрастанию", "нет", "нет"]
-    )
-    @patch("builtins.print")
-    def test_main_sort_ascending(self, mock_print, mock_input):
-        """Тест функции сортировки по возрастанию"""
-        main(test_mode=True, max_iterations=1)
-        mock_print.assert_any_call("\nОтсортировать операции по дате? Да/Нет")
-        mock_print.assert_any_call(
-            "Отсортировать по возрастанию или по убыванию? (введите: по возрастанию/по убыванию)"
-        )
+    # Преобразуем путь в строку для совместимости с вызовом read_excel
+    transactions = load_transactions(str(sample_transactions_file))
 
-    @patch("builtins.input", side_effect=["1", "data/operations.json", "EXECUTED", "нет", "да", "да", "открытие"])
-    @patch("builtins.print")
-    def test_main_filter_by_description(self, mock_print, mock_input):
-        """Тест работы функции поиска по ключевому слову в описании"""
-        main(test_mode=True, max_iterations=1)
-        mock_print.assert_any_call("\nОтфильтровать список транзакций по определенному слову в описании? Да/Нет")
-        mock_print.assert_any_call("03.02.2018 Открытие вклада")
-
-    @patch("builtins.input", side_effect=["4", "нет"])
-    @patch("builtins.print")
-    def test_invalid_menu_choice(self, mock_print, mock_input):
-        """Обработка некорректного ввода"""
-        main(test_mode=True, max_iterations=2)
-        mock_print.assert_any_call("Некорректный выбор. Попробуйте снова.")
+    # Assertions
+    assert not transactions.empty
+    assert list(transactions.columns) == ["date", "category", "amount"]
+    assert pd.api.types.is_datetime64_any_dtype(transactions["date"])
+    assert pd.api.types.is_string_dtype(transactions["category"])
+    assert pd.api.types.is_float_dtype(transactions["amount"])
+    mock_read_excel.assert_called_once_with(str(sample_transactions_file))
 
 
-if __name__ == "__main__":
-    unittest.main()
+@patch("builtins.input", side_effect=["1", "data/operations.xlsx", "каршеринг", "30.12.2020", "0"])
+@patch("builtins.print")
+def test_main_function(mock_print, mock_input):
+    """
+    Тест основной логики программы
+    """
+    main()
+
+    # Проверяем, что программа вызвала input и print
+    assert mock_input.call_count == 5
+    mock_print.assert_any_call("Программа анализа транзакций")
+    mock_print.assert_any_call("Выберите действие:")
+    mock_print.assert_any_call("Результат анализа (траты по категории):")

@@ -1,36 +1,41 @@
+import json
 import os
 from unittest.mock import mock_open, patch
 
-from src.utils import get_or_create_api_key
+from src.utils import save_to_file
 
 
-@patch("builtins.input", return_value="test_api_key")
+@patch("os.makedirs")
 @patch("builtins.open", new_callable=mock_open)
-@patch("os.getenv", side_effect=[None, "test_api_key"])
-@patch("src.utils.load_dotenv")
-def test_get_or_create_api_key_missing_key(mock_load_dotenv, mock_getenv, mock_open_file, mock_input):
-    """Проверка: если ключ отсутствует, он запрашивается у пользователя и сохраняется."""
-    api_key = get_or_create_api_key()
-    assert api_key == "test_api_key"
-    mock_open_file.assert_called_with(os.path.join(os.getcwd(), "../.env"), "a", encoding="utf-8")
-    mock_open_file().write.assert_called_with("API_KEY=test_api_key\n")
+def test_save_to_file_json(mock_open_instance, mock_makedirs, sample_dataframe, sample_output_dir):
+    """
+    Тест работы декоратора по записи JSON файла
+    """
+    # Относительный путь, передаваемый в декоратор
+    relative_output_path = "output/test_output.json"
 
+    # Абсолютный путь, используемый декоратором
+    absolute_output_path = os.path.join(sample_output_dir, "test_output.json")
 
-@patch("builtins.input", side_effect=["", "valid_api_key"])
-@patch("builtins.open", new_callable=mock_open)
-@patch("os.getenv", side_effect=[None, "valid_api_key"])
-@patch("src.utils.load_dotenv")
-def test_get_or_create_api_key_invalid_input(mock_load_dotenv, mock_getenv, mock_open_file, mock_input):
-    """Проверка обработки пустого ввода API-ключа."""
-    api_key = get_or_create_api_key()
-    assert api_key == "valid_api_key"
-    mock_open_file.assert_called_with(os.path.join(os.getcwd(), "../.env"), "a", encoding="utf-8")
-    mock_open_file().write.assert_called_with("API_KEY=valid_api_key\n")
+    @save_to_file(filename=relative_output_path)
+    def test_function():
+        return sample_dataframe
 
+    test_function()
 
-@patch("os.getenv", return_value="existing_api_key")
-@patch("src.utils.load_dotenv")
-def test_get_or_create_api_key_existing_key(mock_load_dotenv, mock_getenv):
-    """Проверка: если ключ существует, он возвращается из .env."""
-    api_key = get_or_create_api_key()
-    assert api_key == "existing_api_key"
+    # Проверяем, что os.makedirs вызван с ожидаемым абсолютным путем
+    mock_makedirs.assert_called_once_with(os.path.dirname(absolute_output_path), exist_ok=True)
+
+    # Проверяем, что open был вызван с правильным абсолютным путем
+    mock_open_instance.assert_called()  # Проверяем, что `open` был вызван
+    call_args = mock_open_instance.call_args  # Получаем аргументы вызова
+    assert call_args[0][0] == absolute_output_path  # Проверяем путь
+    assert call_args[0][1] == "w"  # Проверяем режим записи
+    assert call_args[1].get("encoding") == "utf-8"  # Проверяем кодировку
+
+    # Проверяем содержимое записанного файла
+    handle = mock_open_instance()
+    saved_data = json.loads(handle.write.call_args[0][0])  # Читаем данные, переданные в write
+    assert len(saved_data) == len(sample_dataframe)
+    assert all("column1" in row for row in saved_data)
+    assert all("column2" in row for row in saved_data)
